@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "Backend for the hexproof.io service."
 authors = ["MrTeferi <freethoughtleft@gmail.com>"]
 readme = "README.md"
-packages = [{include = "hexproof"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
