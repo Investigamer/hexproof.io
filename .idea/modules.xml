@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/hexproof.io.iml" filepath="$PROJECT_DIR$/.idea/hexproof.io.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/hexproof.iml" filepath="$PROJECT_DIR$/.idea/hexproof.iml" />
     </modules>
   </component>
 </project>

@@ -1,25 +1,44 @@
 [tool.poetry]
-name = "hexproof-io"
+name = "hexproof"
 version = "0.1.0"
-description = "Backend for the hexproof.io service."
-authors = ["MrTeferi <freethoughtleft@gmail.com>"]
+description = "A comprehensive Magic the Gathering data and resources API."
+authors = ["Investigamer <freethoughtleft@gmail.com>"]
+license = "MPL-2.0"
 readme = "README.md"
+keywords = ["hexproof", "Magic the Gathering", "Magic", "mtg", "scryfall", "mtgjson", "python"]
+classifiers = [
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
 
 [tool.poetry.dependencies]
-python = "^3.9"
-django = "^4.2.7"
-django-ninja = "^0.22.2"
-python-dotenv = "^1.0.0"
+python = ">=3.8.0,<3.13.0"
+requests = "^2.31.0"
 gunicorn = "^21.2.0"
-psycopg2-binary = "^2.9.9"
+bs4 = "^0.0.1"
+ratelimit = "^2.2.1"
+pyyaml = "^6.0.1"
+backoff = "^2.2.1"
+yarl = "^1.9.3"
+django-ninja = "^1.0.1"
+python-dotenv = "^1.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
 commitizen = "^3.12.0"
-black = "^23.11.0"
-isort = "^5.12.0"
-pre-commit = "^3.5.0"
+mypy = "^1.7.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.commitizen]
+version = "0.1.0"
+tag_format = "v$version"
+update_changelog_on_bump = true
+version_files = [
+    "pyproject.toml:version"
+]
