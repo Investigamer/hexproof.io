@@ -5,7 +5,8 @@
 # Standard Library Imports
 from contextlib import suppress
 from enum import IntEnum
-from typing import TypedDict, Literal
+from typing import Literal
+from typing_extensions import TypedDict
 
 # Third Party Imports
 from ninja import Router

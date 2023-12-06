@@ -2,8 +2,8 @@
 * MTGJSON Types
 """
 # Standard Library Imports
-from typing import TypedDict, Literal
-from typing_extensions import NotRequired
+from typing import Literal
+from typing_extensions import NotRequired, TypedDict
 
 
 """

@@ -1,6 +1,6 @@
 # Standard Library Imports
 from pathlib import Path
-from typing import TypedDict
+from typing_extensions import TypedDict
 
 import yarl
 # Third Party Imports

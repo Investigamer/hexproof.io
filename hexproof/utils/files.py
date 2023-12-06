@@ -6,7 +6,8 @@ import os
 import json
 from contextlib import suppress
 from pathlib import Path
-from typing import Optional, TypedDict, Callable, Union
+from typing import Optional, Callable, Union
+from typing_extensions import TypedDict
 from threading import Lock
 
 # Third Party Imports
