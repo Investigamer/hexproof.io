@@ -25,7 +25,7 @@ def update_package_symbols_set(url: Optional[yarl.URL] = None) -> None:
 
     # Ensure path exists
     path = HexproofConfig.DIR_SYMBOLS_SET / 'set.zip'
-    path.mkdir(mode=755, parents=True, exist_ok=True)
+    path.parent.mkdir(mode=755, parents=True, exist_ok=True)
 
     # Download the zip package
     url = url or HexproofConfig.URIS['VECTORS'] / 'package' / 'sets.zip'
