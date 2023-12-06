@@ -2,7 +2,8 @@
 * Scryfall Data Types
 """
 # Standard Library Imports
-from typing import TypedDict, Literal, NotRequired, Union
+from typing import TypedDict, Literal, Union
+from typing_extensions import NotRequired
 
 SetTypes = Union[
     Literal['core'],

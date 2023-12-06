@@ -2,7 +2,8 @@
 * Set Model Schemas
 """
 # Standard Library Imports
-from typing import TypedDict, NotRequired
+from typing import TypedDict
+from typing_extensions import NotRequired
 
 
 class SetFlagsSchema(TypedDict):
