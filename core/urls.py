@@ -6,10 +6,11 @@ https://docs.djangoproject.com/en/4.2/topics/http/urls/
 """
 # Third Party Imports
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
+from hexproof.routes import api
 
 # App-wide URL routing
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('hexproof.routes'))
+    path('', api.urls)
 ]

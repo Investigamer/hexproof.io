@@ -14,11 +14,6 @@ from hexproof.endpoints.mtg.symbols import api as route_symbols
 api = NinjaAPI(
     docs_url='docs/',
     title='Hexproof API')
-api.add_router('key/', route_keys)
-api.add_router('sets/', route_sets)
-api.add_router('symbols/', route_symbols)
-
-# Route the root URL to the API
-urlpatterns = [
-    path('', api.urls)
-]
+api.add_router('/key/', route_keys)
+api.add_router('/sets/', route_sets)
+api.add_router('/symbols/', route_symbols)
