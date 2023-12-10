@@ -13,3 +13,4 @@ class MTJ_URL:
     API = yarl.URL('https://mtgjson.com/api/v5')
     API_SET_LIST = yarl.URL('https://mtgjson.com/api/v5/SetList.json')
     API_SET_ALL = yarl.URL('https://mtgjson.com/api/v5/AllSetFiles.tar.gz')
+    API_META = yarl.URL('https://mtgjson.com/api/v5/Meta.json')

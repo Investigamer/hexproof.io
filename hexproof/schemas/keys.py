@@ -11,6 +11,7 @@ from ninja import Schema
 
 
 class APIKeySchema(Schema):
+    """API object schema for API Keys."""
     name: str
     key: str
     active: bool

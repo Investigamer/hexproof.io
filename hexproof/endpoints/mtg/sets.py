@@ -1,6 +1,6 @@
 """
-* Endpoint: Keys
-* This route handles management of all Key objects.
+* Endpoint: Sets
+* This route handles management of all Set objects.
 """
 # Standard Library Imports
 from contextlib import suppress
@@ -11,7 +11,7 @@ from django.http import HttpRequest, JsonResponse
 
 # Local Imports
 from hexproof.models import Set
-from hexproof.schemas import SetSchema
+from hexproof.schemas import SetSchema, schema_or_error, get_error_response, ErrorStatus
 
 # Django Ninja Objects
 api = Router()
@@ -21,24 +21,28 @@ api = Router()
 """
 
 
-@api.get("", response=dict[str, SetSchema])
+@api.get('', **schema_or_error(dict[str, SetSchema]))
 def all_sets(request: HttpRequest, pretty: bool = False):
     """Returns a dictionary of data objects for all sets by code."""
-    obj = {d.code: d._api_obj for d in Set.objects.all()}
-    return JsonResponse(obj, json_dumps_params={'indent': 2}) if pretty else obj
+    return JsonResponse(
+        {d.code: d._api_obj.dict() for d in Set.objects.all()},
+        json_dumps_params={'indent': 2}
+    ) if pretty else {d.code: d._api_obj for d in Set.objects.all()}
 
 
-@api.get("{code}", response=SetSchema)
+@api.get('{code}', **schema_or_error(SetSchema))
 def get_set(request: HttpRequest, code: str, pretty: bool = False):
     """Returns a data object for a specific set."""
-    with suppress():
+    with suppress(Exception):
+
+        # Return found set
         obj = Set.objects.get(code=code.lower())
         return JsonResponse(
-            data=obj._api_obj,
+            data=obj._api_obj.dict(),
             json_dumps_params={'indent': 2}
         ) if pretty else obj._api_obj
-    return {
-        'object': 'error',
-        'message': f"Set matching code '{code}' not found.",
-        'status': 404
-    }
+
+    # Set couldn't be located
+    return get_error_response(
+        status=ErrorStatus.NotFound,
+        details=f"Set matching code '{code}' not found.")

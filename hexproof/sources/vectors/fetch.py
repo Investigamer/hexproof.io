@@ -12,6 +12,7 @@ import yarl
 
 # Local Imports
 from hexproof.apps import HexproofConfig
+from hexproof.models import Meta
 from hexproof.sources.github import fetch as Github
 from hexproof.utils.archive import unpack_zip
 
@@ -24,7 +25,7 @@ def update_package_symbols_set(url: Optional[yarl.URL] = None) -> None:
     """Updates our 'Set' symbol local assets."""
 
     # Ensure path exists
-    path = HexproofConfig.DIR_SYMBOLS_SET / 'set.zip'
+    path = HexproofConfig.DIR_SYMBOLS / 'set.zip'
     path.parent.mkdir(mode=755, parents=True, exist_ok=True)
 
     # Download the zip package
@@ -39,8 +40,8 @@ def update_manifest_symbols_set() -> tuple[bool, dict]:
     """Update our Set' symbol manifest."""
 
     # Pathing
-    manifest_path = HexproofConfig.DIRS['ASSETS'] / 'manifest.set.json'
-    manifest_url = HexproofConfig.URIS['VECTORS'] / 'data' / 'manifest.set.json'
+    manifest_path = HexproofConfig.DIRS['ASSETS'] / 'manifest.json'
+    manifest_url = HexproofConfig.URIS['VECTORS'] / 'manifest.json'
 
     # Request the updated manifest
     try:
@@ -52,11 +53,9 @@ def update_manifest_symbols_set() -> tuple[bool, dict]:
 
     # Check existing manifest if it exists
     with suppress(Exception):
-        if manifest_path.is_file():
-            with open(manifest_path, 'r', encoding='utf-8') as f:
-                data = json.load(f) or {}
-            if data.get('meta', {}).get('version', '') == manifest.get('meta', {}).get('version', ''):
-                return False, {'object': 'message', 'message': 'Set symbols are already up-to-date!'}
+        current = Meta.objects.get(resource='symbols').version_formatted
+        if current == manifest.get('meta', {}).get('version', ''):
+            return False, {'object': 'message', 'message': 'Set symbols are already up-to-date!'}
 
     # Update existing manifest
     with suppress():

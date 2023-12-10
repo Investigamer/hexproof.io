@@ -4,9 +4,6 @@
 """
 # Standard Library Imports
 from contextlib import suppress
-from enum import IntEnum
-from typing import Literal
-from typing_extensions import TypedDict
 
 # Third Party Imports
 from ninja import Router
@@ -14,40 +11,17 @@ from django.http import HttpRequest
 
 # Local Imports
 from hexproof.models import APIKey
-from hexproof.schemas import APIKeySchema
+from hexproof.schemas import APIKeySchema, schema_or_error, ErrorStatus, get_error_response
 
 # Django Ninja Objects
 api = Router()
-
-
-"""
-* Response Types
-"""
-
-
-class KeyResponses(IntEnum):
-    """Enumerates the potential error reasons for `get/key/`."""
-    Valid = 200
-    Missing = 404
-    Disabled = 403
-
-
-class ReturnError(TypedDict):
-    """Defines the object structure of an error response."""
-    object: Literal['error']
-    message: str
-
 
 """
 * Endpoints
 """
 
 
-@api.get("get/{name}", response={
-    KeyResponses.Valid: APIKeySchema,
-    KeyResponses.Missing: ReturnError,
-    KeyResponses.Disabled: ReturnError
-})
+@api.get("{name}", **schema_or_error(APIKeySchema))
 def get_key(request: HttpRequest, name: str):
     """Retrieve an API key that is currently active.
 
@@ -56,16 +30,18 @@ def get_key(request: HttpRequest, name: str):
         name (str): Name of the key to look for.
 
     Returns:
-        dict: A key object if an active key was found, otherwise
+        APIKeySchema: An APIKey object if an active key was found, otherwise
             an error object with a reason code and readable message.
     """
     with suppress(Exception):
+
+        # Key is valid or disabled
         k = APIKey.objects.get(name=name)
-        if k.active:
-            return k
-        return KeyResponses.Disabled, {
-            'object': 'error',
-            'message': f"API key '{name}' is disabled!"}
-    return KeyResponses.Missing, {
-        'object': 'error',
-        'message': f"API key '{name}' not found!"}
+        return k if k.active else get_error_response(
+            status=ErrorStatus.Disabled,
+            details=f"API key '{name}' is disabled!")
+
+    # Key couldn't be located
+    return get_error_response(
+        status=ErrorStatus.NotFound,
+        details=f"API key '{name}' not found!")

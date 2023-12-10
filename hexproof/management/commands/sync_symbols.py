@@ -3,15 +3,27 @@
 * Pulls the latest manifest files from the 'mtg-vectors' repository,
 compiles the 'Symbol' object database tables, and updates local symbol assets.
 """
+# Standard Library Imports
+from pprint import pprint
 
 # Third Party Imports
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand
 from requests import RequestException
 import yarl
 
+
 # Local Imports
-from hexproof.models import SymbolRarity, SymbolCollectionSet
-from hexproof.sources.vectors.fetch import update_manifest_symbols_set, update_package_symbols_set
+from hexproof.models import Meta
+from hexproof.apps import HexproofConfig
+from hexproof.models.mtg.symbols import (
+    add_or_update_symbol_rarities,
+    add_or_update_symbol_sets,
+    add_or_update_symbol_watermarks,
+    add_or_update_symbol_watermark_parents)
+from hexproof.sources.vectors.fetch import (
+    update_manifest_symbols_set,
+    update_package_symbols_set)
 
 
 class Command(BaseCommand):
@@ -19,46 +31,51 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         """Compiles the database table for the 'SymbolCollectionSet' model and updates local set symbol assets."""
+        # TODO: Add optional args to drop entire symbol table and insert from scratch
 
         # Update our existing manifest, return if update is unsuccessful or unnecessary
         check, manifest = update_manifest_symbols_set()
         if not check:
-            return manifest
+            pprint(manifest)
+            return
 
         # Download the zip file
         try:
             update_package_symbols_set(
                 yarl.URL(manifest.get('meta', {}).get('uri')))
         except RequestException:
-            return {'object': 'error', 'message': 'Unable to download latest set symbol package!', 'status': 502}
+            pprint({'object': 'error', 'message': 'Unable to download latest set symbol package!', 'status': 502})
+            return
 
-        # Drop all entries from the set symbols database
-        SymbolCollectionSet.objects.all().delete()
+        # Update rarities
+        rarities = manifest.get('set', {}).get('rarities', {})
+        add_or_update_symbol_rarities(rarities)
 
         # Initial symbol collection
-        collection = manifest.get('symbols', {})
+        collection = {code: (supported, None) for code, supported in manifest.get('set', {}).get('symbols').items()}
+        collection.update({
+            # Add alias symbols
+            code: (collection[parent][0], parent)
+            for code, parent in manifest.get('set', {}).get('routes', {}).items()
+            if parent in collection and code not in collection})
 
-        # Create alias collection
-        aliases = manifest.get('meta', {}).get('routes', {})
-        collection_aliases = {}
-        for code, parent in aliases.items():
-            if parent in collection and code not in collection:
-                collection_aliases[code] = (parent, collection[parent].copy())
+        # Add collection and aliases to database
+        add_or_update_symbol_sets(collection)
 
-        # Add collection to database
-        for code, supported in collection.items():
-            rarities = SymbolRarity.objects.filter(code__in=supported)
-            item = SymbolCollectionSet.objects.create(code=code)
-            item.supported.set(rarities)
-            item.save()
+        # Add watermarks and watermarks with parents to database
+        add_or_update_symbol_watermarks(manifest.get('watermark', {}).get('symbols', []))
+        add_or_update_symbol_watermark_parents()
 
-        # Add alias collection to database
-        for code, data in collection_aliases.items():
-            parent, supported = data
-            rarities = SymbolRarity.objects.filter(code__in=supported)
-            item = SymbolCollectionSet.objects.create(code=code, parent=parent)
-            item.supported.set(rarities)
-            item.save()
+        # Update metadata
+        meta = manifest.get('meta', {})
+        try:
+            obj = Meta.objects.get(resource='symbols')
+            obj.date = meta.get('date', '')
+            obj.version = ''.join(meta.get('version', '').split('+')[:-1])
+            obj.uri = str(HexproofConfig.API_URL / 'symbols')
+            obj.save()
+        except ObjectDoesNotExist:
+            print("Meta for resource 'symbols' not found!")
 
         # Operation successful
         print("Symbols synced successfully!")

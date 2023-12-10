@@ -126,22 +126,19 @@ class Set(Model):
     @property
     def uris_scryfall(self) -> SetURIScryfallSchema:
         """Object containing Scryfall related URI's."""
-        obj = {
-            'object': str(SCRY_URL.API_SETS / self.id_oracle),
-            'page': str(SCRY_URL.ROOT_SETS / self.code),
-            'search': str(SCRY_URL.API_CARDS_SEARCH.with_query({
+        return SetURIScryfallSchema(
+            object=str(SCRY_URL.API_SETS / self.id_oracle),
+            page=str(SCRY_URL.ROOT_SETS / self.code),
+            parent=str(SCRY_URL.API_SETS / self.code_parent) if self.code_parent else None,
+            search=str(SCRY_URL.API_CARDS_SEARCH.with_query({
                 'q': f'e:{self.code}',
                 'include_extras': 'true',
                 'include_variations': 'true',
                 'unique': 'prints',
                 'order': 'set'
             })),
-            'icon': str(yarl.URL(str(self.scryfall_icon_uri)))
-        }
-        # Add parent code if necessary
-        if self.code_parent:
-            obj['parent'] = str(SCRY_URL.API_SETS / self.code_parent)
-        return dict(sorted(obj.items()))
+            icon=str(yarl.URL(str(self.scryfall_icon_uri)))
+        )
 
     """
     * Flags Object
@@ -150,14 +147,14 @@ class Set(Model):
     @property
     def flags(self) -> SetFlagsSchema:
         """Object containing boolean flags."""
-        return {
-            'is_digital_only': self.is_digital_only,
-            'is_foil_only': self.is_foil_only,
-            'is_foreign_only': self.is_foreign_only,
-            'is_nonfoil_only': self.is_nonfoil_only,
-            'is_paper_only': self.is_paper_only,
-            'is_preview': self.is_preview,
-        }
+        return SetFlagsSchema(
+            is_digital_only=self.is_digital_only,
+            is_foil_only=self.is_foil_only,
+            is_foreign_only=self.is_foreign_only,
+            is_nonfoil_only=self.is_nonfoil_only,
+            is_paper_only=self.is_paper_only,
+            is_preview=self.is_preview,
+        )
 
     """
     * API Return Objects
@@ -165,39 +162,41 @@ class Set(Model):
 
     @property
     def _api_obj(self) -> SetSchema:
+        """The main comprehensive API object Schema for the 'Set' model."""
+
         # Get the symbol URI map and code, revert to default if unavailable
         symbol = self.symbol if self.symbol is not None else SymbolCollectionSet.get_default_symbol()
         symbol_map, symbol_code = (
             symbol.get_symbol_uri_map(), symbol.code.lower()
         ) if symbol is not None else (None, 'default')
-        return {
-            k: v for k, v in {
-                'block': self.block,
-                'block_code': self.block_code,
-                'code': self.code,
-                'code_alt': self.code_alt,
-                'code_arena': self.code_arena,
-                'code_keyrune': self.code_keyrune,
-                'code_mtgo': self.code_mtgo,
-                'code_parent': self.code_parent,
-                'code_symbol': symbol_code,
-                'count_cards': self.count_cards,
-                'count_printed': self.count_printed,
-                'count_tokens': self.count_tokens,
-                'date_released': self.date_released.strftime('%Y-%m-%d'),
-                'flags': self.flags,
-                'id': self.id_oracle,
-                'id_cardmarket': self.id_cardmarket,
-                'id_cardmarket_extras': self.id_cardmarket_extras,
-                'id_cardsphere': self.id_cardsphere,
-                'id_tcgplayer': self.id_tcgplayer,
-                'name': self.name,
-                'name_cardmarket': self.name_cardmarket,
-                'type': self.type,
-                'uris_scryfall': self.uris_scryfall,
-                'uris_symbol': symbol_map
-            }.items() if v not in [None, '']
-        }
+
+        # Return the formatted schema
+        return SetSchema(
+            block=self.block,
+            block_code=self.block_code,
+            code=self.code,
+            code_alt=self.code_alt,
+            code_arena=self.code_arena,
+            code_keyrune=self.code_keyrune,
+            code_mtgo=self.code_mtgo,
+            code_parent=self.code_parent,
+            code_symbol=symbol_code,
+            count_cards=self.count_cards,
+            count_printed=self.count_printed,
+            count_tokens=self.count_tokens,
+            date_released=self.date_released.strftime('%Y-%m-%d'),
+            flags=self.flags,
+            id=self.id_oracle,
+            id_cardmarket=self.id_cardmarket,
+            id_cardmarket_extras=self.id_cardmarket_extras,
+            id_cardsphere=self.id_cardsphere,
+            id_tcgplayer=self.id_tcgplayer,
+            name=self.name,
+            name_cardmarket=self.name_cardmarket,
+            type=self.type,
+            uris_scryfall=self.uris_scryfall,
+            uris_symbol=symbol_map
+        )
 
 
 """

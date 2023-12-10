@@ -64,7 +64,20 @@ def request_handler_mtgjson_gql(func) -> Callable:
 
 
 @request_handler_mtgjson
-def get_set(card_set: str) -> dict:
+def get_meta() -> MTJ.Meta:
+    """MTG.Meta: Get the current metadata resource for MTGJSON."""
+    res = requests.get(
+        url=MTJ_URL.API_META,
+        headers=mtgjson_request_header)
+
+    # Check for error
+    if not res.status_code == 200:
+        raise requests.RequestException(response=res)
+    return res.json().get('data', {})
+
+
+@request_handler_mtgjson
+def get_set(card_set: str) -> MTJ.Set:
     """Grab available set data from MTG Json.
 
     Args:
@@ -74,7 +87,7 @@ def get_set(card_set: str) -> dict:
         MTGJson set dict or empty dict.
     """
     res = requests.get(
-        (MTJ_URL.API / card_set.upper()).with_suffix('.json'),
+        url=(MTJ_URL.API / card_set.upper()).with_suffix('.json'),
         headers=mtgjson_request_header)
 
     # Check for error
@@ -86,7 +99,9 @@ def get_set(card_set: str) -> dict:
 @request_handler_mtgjson
 def get_set_list() -> list[MTJ.SetList]:
     """Grab the current 'SetList' MTGJSON file."""
-    res = requests.get(MTJ_URL.API_SET_LIST, headers=mtgjson_request_header)
+    res = requests.get(
+        url=MTJ_URL.API_SET_LIST,
+        headers=mtgjson_request_header)
 
     # Check for error
     if not res.status_code == 200:
@@ -98,7 +113,9 @@ def get_set_list() -> list[MTJ.SetList]:
 def get_sets_all() -> Path:
     """Download the current JSON file archive from the 'AllSetFiles' MTGJSON endpoint."""
     path = Path(HexproofConfig.DIRS['CACHE'], 'AllSetFiles.tar.gz')
-    res = requests.get(MTJ_URL.API_SET_ALL, headers=mtgjson_request_header)
+    res = requests.get(
+        url=MTJ_URL.API_SET_ALL,
+        headers=mtgjson_request_header)
     with open(path, 'wb') as f:
         f.write(res.content)
 

@@ -3,20 +3,24 @@
 * Pulls the latest Scryfall and MTGJSON bulk 'Set' data and
 compiles the unified 'Set' object database tables.
 """
+# Local Imports
+from datetime import datetime
 from typing import Union
 
 # Third Party Imports
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand
 from pathlib import Path
 
 # Local Imports
-
-from hexproof.models import Set
+from hexproof.apps import HexproofConfig
+from hexproof.models import Set, Meta
 from hexproof.models.mtg.sets import add_mtgjson_set_data
 from hexproof.models.mtg.symbols import match_symbol_to_set
 from hexproof.sources import mtgjson as MTJ
 from hexproof.sources import scryfall as SCRY
 from hexproof.utils.files import load_data_file
+from hexproof.utils.project import get_current_version
 
 
 class Command(BaseCommand):
@@ -24,6 +28,17 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         """Compiles the database table for the 'Set' model."""
+        # TODO: Add optional arg to drop entire set table and insert from scratch
+
+        # Check current metadata to see if sets are up-to-date
+        JSON_meta: MTJ.Meta = MTJ.get_meta()
+        try:
+            mtgjson_resource = Meta.objects.get(resource='mtgjson')
+        except ObjectDoesNotExist:
+            mtgjson_resource = Meta.objects.create(resource='mtgjson', uri=str(MTJ.MTJ_URL.API_META))
+        if mtgjson_resource.version_formatted == JSON_meta.get('version'):
+            print("MTGJSON data already up-to-date!")
+            return
 
         # Pull the latest Scryfall and MTGJSON data
         JSON_data: dict[str, MTJ.SetList] = {d['code']: d for d in MTJ.get_set_list()}
@@ -89,6 +104,36 @@ class Command(BaseCommand):
 
             # Add new Set
             Set.objects.create(**set_obj)
+
+        # Update MTGJSON metadata
+        try:
+            obj = Meta.objects.get(resource='mtgjson')
+            obj.date = JSON_meta.get('date', '')
+            obj.version = ''.join(JSON_meta.get('version', '').split('+')[:-1])
+            obj.uri = str(MTJ.MTJ_URL.API_META)
+            obj.save()
+        except ObjectDoesNotExist:
+            print("Meta for resource 'mtgjson' not found!")
+
+        # Update Scryfall metadata
+        try:
+            obj = Meta.objects.get(resource='scryfall')
+            obj.date = datetime.now()
+            obj.version = get_current_version()
+            obj.uri = str(SCRY.SCRY_URL.API_BULK)
+            obj.save()
+        except ObjectDoesNotExist:
+            print("Meta for resource 'scryfall' not found!")
+
+        # Update 'sets' resource metadata
+        try:
+            obj = Meta.objects.get(resource='sets')
+            obj.date = datetime.now()
+            obj.version = get_current_version()
+            obj.uri = str(HexproofConfig.API_URL / 'sets')
+            obj.save()
+        except ObjectDoesNotExist:
+            print("Meta for resource 'sets' not found!")
 
         # Operation successful
         print("Sets synced!")

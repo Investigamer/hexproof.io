@@ -2,10 +2,16 @@
 * Set Model Schemas
 """
 # Standard Library Imports
-from typing_extensions import NotRequired, TypedDict
+from typing import Optional
+
+# Third Party Imports
+from ninja import Schema
+
+# Local Imports
+from hexproof.schemas.mtg.symbols import SetSymbolURI
 
 
-class SetFlagsSchema(TypedDict):
+class SetFlagsSchema(Schema):
     """Boolean flags for the Set object."""
     is_digital_only: bool
     is_foil_only: bool
@@ -15,54 +21,38 @@ class SetFlagsSchema(TypedDict):
     is_preview: bool
 
 
-class SetURIScryfallSchema(TypedDict):
+class SetURIScryfallSchema(Schema):
     """Scryfall URI's for Set object."""
-    icon: NotRequired[str]
-    object: NotRequired[str]
-    page: NotRequired[str]
-    parent: NotRequired[str]
-    search: NotRequired[str]
-    symbol: NotRequired[str]
+    icon: Optional[str]
+    object: Optional[str]
+    page: Optional[str]
+    parent: Optional[str]
+    search: Optional[str]
 
 
-SetURISymbolSchema = TypedDict('SetURISymbolSchema', {
-    '80': NotRequired[str],
-    'bonus': NotRequired[str],
-    'common': NotRequired[str],
-    'half': NotRequired[str],
-    'mythic': NotRequired[str],
-    'rare': NotRequired[str],
-    'special': NotRequired[str],
-    'timeshifted': NotRequired[str],
-    'uncommon': NotRequired[str],
-    'watermark': NotRequired[str]
-})
-SetURISymbolSchema.__doc__ = "Endpoint URI's for 'Set' Symbol SVG assets."
-
-
-class SetSchema(TypedDict):
+class SetSchema(Schema):
     """Entire Set object as an API return schema."""
-    block: NotRequired[str]
-    block_code: NotRequired[str]
+    block: Optional[str]
+    block_code: Optional[str]
     code: str
-    code_alt: NotRequired[str]
-    code_arena: NotRequired[str]
-    code_keyrune: NotRequired[str]
-    code_mtgo: NotRequired[str]
-    code_parent: NotRequired[str]
+    code_alt: Optional[str]
+    code_arena: Optional[str]
+    code_keyrune: Optional[str]
+    code_mtgo: Optional[str]
+    code_parent: Optional[str]
     code_symbol: str
     count_cards: int
-    count_printed: NotRequired[int]
+    count_printed: Optional[int]
     count_tokens: int
     date_released: str
     flags: SetFlagsSchema
     id: str
-    id_cardmarket: NotRequired[int]
-    id_cardmarket_extras: NotRequired[int]
-    id_cardsphere: NotRequired[int]
-    id_tcgplayer: NotRequired[int]
+    id_cardmarket: Optional[int]
+    id_cardmarket_extras: Optional[int]
+    id_cardsphere: Optional[int]
+    id_tcgplayer: Optional[int]
     name: str
-    name_cardmarket: NotRequired[str]
+    name_cardmarket: Optional[str]
     type: str
     uris_scryfall: SetURIScryfallSchema
-    uris_symbol: SetURISymbolSchema
+    uris_symbol: SetSymbolURI

@@ -7,6 +7,17 @@ from typing_extensions import NotRequired, TypedDict
 
 
 """
+* Types: Metadata
+"""
+
+
+class Meta(TypedDict):
+    """Model describing the properties of the MTGJSON application meta data."""
+    date: str
+    version: str
+
+
+"""
 * Types: Translations
 """
 
