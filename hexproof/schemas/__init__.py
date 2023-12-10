@@ -1,6 +1,7 @@
 # Standard Library Imports
 from enum import IntEnum
-from typing import Any, Optional, TypedDict, Union
+from typing import Any, Optional, Union
+from typing_extensions import TypedDict
 
 # Third Party Imports
 from ninja import Schema

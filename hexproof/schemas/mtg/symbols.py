@@ -2,7 +2,7 @@
 * Symbol Model Schemas
 """
 # Standard Library Imports
-from typing import TypedDict, NotRequired
+from typing_extensions import TypedDict, NotRequired
 
 # Third Party Imports
 from ninja import Schema
