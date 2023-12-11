@@ -38,7 +38,7 @@ def get_meta_all(request: HttpRequest, pretty: bool = False):
     ) if pretty else {n.resource: n._api_obj for n in Meta.objects.all()}
 
 
-@api.get("{resource}", **schema_or_error(dict[str, MetaSchema]))
+@api.get("{resource}", **schema_or_error(MetaSchema))
 def get_meta(request: HttpRequest, resource: str, pretty: bool = False):
     """Retrieve a dictionary of all resource metas.
 
@@ -59,4 +59,4 @@ def get_meta(request: HttpRequest, resource: str, pretty: bool = False):
     # Meta resource not found
     return get_error_response(
         status=ErrorStatus.NotFound,
-        details=f"Meta info matching resource name '{resource}' not found.")
+        details=f"Metadata matching resource name '{resource}' not found.")
