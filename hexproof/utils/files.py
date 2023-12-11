@@ -100,14 +100,11 @@ def get_file_size_mb(file_path: Union[str, os.PathLike], decimal: int = 1) -> fl
 """
 
 
-def validate_data_file(path: Path) -> bool:
-    """Checks if a data file exists and is a valid data file type.
+def validate_data_file(path: Path) -> None:
+    """Checks if a data file exists and is a valid data file type. Raises an exception if validation fails.
 
     Args:
         path: Path to the data file.
-
-    Returns:
-        True if validation was successful, otherwise raises an exception.
 
     Raises:
         FileNotFoundError: If data file does not exist.
@@ -117,12 +114,11 @@ def validate_data_file(path: Path) -> bool:
     if not path.is_file():
         raise FileNotFoundError(f"Data file doesn't exist on the server:\n{str(path)}")
 
-    # Check if data file is valid
+    # Check if data file is a supported data type
     if path.suffix.lower() not in supported_data_types:
         raise ValueError("Data file provided does not match a supported data file type.\n"
                          f"Types supported: {', '.join(supported_data_types)}\n"
                          f"Type received: {path.suffix}")
-    return True
 
 
 def load_data_file(
@@ -144,8 +140,7 @@ def load_data_file(
         OSError: If dumping to data file fails.
     """
     # Check if data file is valid
-    if not validate_data_file(path):
-        raise OSError(f"Unable to load data from data file:\n{str(path)}")
+    validate_data_file(path)
 
     # Pull the parser and insert user config into kwargs
     parser: DataFileType = data_types.get(path.suffix.lower(), {}).copy()
@@ -176,8 +171,7 @@ def dump_data_file(
         OSError: If dumping to data file fails.
     """
     # Check if data file is valid
-    if not validate_data_file(path):
-        raise OSError(f"Unable to dump data from data file:\n{str(path)}")
+    validate_data_file(path)
 
     # Pull the parser and insert user config into kwargs
     parser: DataFileType = data_types.get(path.suffix.lower(), {}).copy()

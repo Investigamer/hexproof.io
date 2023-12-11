@@ -12,6 +12,7 @@ from ninja import Router
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest, FileResponse
 
+from hexproof.apps import HexproofConfig
 # Local Imports
 from hexproof.models import (
     SymbolCollectionSet,
@@ -48,6 +49,23 @@ def get_svg(svg_file: Path) -> FileResponse:
     if not svg_file.is_file():
         raise FileNotFoundError(f"File '{str(svg_file)}' not found!")
     return FileResponse(open(svg_file, 'rb'), content_type='image/svg+xml')
+
+
+def get_zip(zip_file: Path) -> FileResponse:
+    """Returns a file response for a given ZIP file.
+
+    Args:
+        zip_file: Path to the ZIP file.
+
+    Returns:
+        A 'FileResponse' object to let django render the ZIP file.
+
+    Raises:
+        FileNotFoundError: If the file can't be located.
+    """
+    if not zip_file.is_file():
+        raise FileNotFoundError(f"File '{str(zip_file)}' not found!")
+    return FileResponse(open(zip_file, 'rb'), content_type='application/zip')
 
 
 def search_symbol_set(code: str) -> SymbolCollectionSet:
@@ -300,3 +318,28 @@ def get_symbol_watermark(request: HttpRequest, name: str):
         return get_error_response(
             status=ErrorStatus.Server,
             details=f"Unable to locate SVG file for recognized watermark: '{name}'")
+
+
+"""
+* Package API Endpoints
+"""
+
+
+@api.get('package', **schema_or_error(type[FileResponse]))
+def get_symbol_package(request: HttpRequest):
+    """Return the current symbol package.
+
+    Args:
+        request: HTTP request object.
+
+    Returns:
+        The current 'package.zip' for symbol SVG assets.
+    """
+    package = HexproofConfig.DIR_SYMBOLS / 'package.zip'
+    try:
+        return get_zip(package)
+    except FileNotFoundError:
+        # Zip file resource not found
+        return get_error_response(
+            status=ErrorStatus.Server,
+            details="Unable to locate symbols ZIP package!")

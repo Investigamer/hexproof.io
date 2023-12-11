@@ -1,7 +1,7 @@
 # Standard Library Imports
 import json
 from enum import IntEnum
-from typing import Any, Optional, Union, Mapping
+from typing import Any, Optional, Union
 from typing_extensions import TypedDict
 
 # Third Party Imports
