@@ -25,15 +25,15 @@ def update_package_symbols_set(url: Optional[yarl.URL] = None) -> None:
     """Updates our 'Set' symbol local assets."""
 
     # Ensure path exists
-    path = HexproofConfig.DIR_SYMBOLS / 'set.zip'
+    path = HexproofConfig.DIR_SYMBOLS / 'package.zip'
     path.parent.mkdir(mode=755, parents=True, exist_ok=True)
 
     # Download the zip package
-    url = url or HexproofConfig.URIS['VECTORS'] / 'package' / 'sets.zip'
+    url = url or HexproofConfig.URIS['VECTORS'] / 'package.zip'
     Github.get_archive_zip(url, path)
 
     # Unpack the zip package
-    unpack_zip(path)
+    unpack_zip(path, remove=False)
 
 
 def update_manifest_symbols_set() -> tuple[bool, dict]:

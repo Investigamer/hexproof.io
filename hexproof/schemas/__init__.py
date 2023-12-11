@@ -1,17 +1,39 @@
 # Standard Library Imports
+import json
 from enum import IntEnum
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, Mapping
 from typing_extensions import TypedDict
 
 # Third Party Imports
 from ninja import Schema
-from django.http import HttpResponse
+from ninja.renderers import JSONRenderer
+from django.http import HttpResponse, HttpRequest
 
 # Local Imports
 from hexproof.schemas.keys import APIKeySchema
 from hexproof.schemas.meta import MetaSchema
 from hexproof.schemas.mtg.sets import SetSchema, SetFlagsSchema, SetURIScryfallSchema
 from hexproof.schemas.mtg.symbols import SetSymbolURI, WatermarkSymbolURI
+from hexproof.utils.strings import str_to_bool_safe
+
+"""
+* Renderers
+"""
+
+
+class PrettyJSON(JSONRenderer):
+    """Render JSON as 'Pretty' if requested."""
+    media_type = "application/json"
+
+    def render(self, request: HttpRequest, data, *, response_status):
+        if str_to_bool_safe(request.GET.get('pretty', 'false')):
+            return json.dumps(data, cls=self.encoder_class, **{'indent': 2})
+        return super().render(request, data, response_status=response_status)
+
+
+"""
+* Schemas
+"""
 
 
 class ErrorStatus(IntEnum):

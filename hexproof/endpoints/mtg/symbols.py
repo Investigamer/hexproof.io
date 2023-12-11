@@ -10,10 +10,14 @@ from typing import Optional
 # Third Party Imports
 from ninja import Router
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpRequest, FileResponse, JsonResponse
+from django.http import HttpRequest, FileResponse
 
 # Local Imports
-from hexproof.models import SymbolCollectionSet, SymbolCollectionWatermark, SymbolRarity, Set
+from hexproof.models import (
+    SymbolCollectionSet,
+    SymbolCollectionWatermark,
+    SymbolRarity,
+    Set)
 from hexproof.schemas import (
     schema_or_error,
     ErrorStatus,
@@ -66,19 +70,17 @@ def search_symbol_set(code: str) -> SymbolCollectionSet:
         return Set.objects.get(code=code.lower()).symbol
 
 
-def get_symbol_set_default(rarity: Optional[str] = None, pretty: bool = False):
+def get_symbol_set_default(rarity: Optional[str] = None):
     """Returns the default set symbol or symbol URI map.
 
     Args:
         rarity: Rarity to look for if provided.
-        pretty: If returning a URI map, whether to return formatted JSON or raw.
     """
     # Get default symbol
     try:
         symbol = SymbolCollectionSet.objects.get(code='DEFAULT')
         if not rarity:
-            obj = symbol.get_symbol_uri_map()
-            return JsonResponse(obj, json_dumps_params={'indent': 2}) if pretty else obj
+            return symbol.get_symbol_uri_map()
     except ObjectDoesNotExist:
         # No default symbol registered in the database
         return get_error_response(
@@ -111,18 +113,16 @@ def get_symbol_set_default(rarity: Optional[str] = None, pretty: bool = False):
 
 
 @api.get('rarity', **schema_or_error(dict[str, str]))
-def get_symbol_rarities(request: HttpRequest, pretty: bool = False):
+def get_symbol_rarities(request: HttpRequest):
     """Return a dictionary of all set symbol rarities.
 
     Args:
         request: HTTP request object.
-        pretty: Whether to format the JSON response for readability.
 
     Returns:
         A dictionary where keys are the rarity code, values are the name of the rarity.
     """
-    obj = {n.code: n.name for n in SymbolRarity.objects.all()}
-    return JsonResponse(obj, json_dumps_params={'indent': 2}) if pretty else obj
+    return {n.code: n.name for n in SymbolRarity.objects.all()}
 
 
 """
@@ -131,36 +131,33 @@ def get_symbol_rarities(request: HttpRequest, pretty: bool = False):
 
 
 @api.get('set', **schema_or_error(dict[str, SetSymbolURI]))
-def get_symbol_set_all(request: HttpRequest, pretty: bool = False):
+def get_symbol_set_all(request: HttpRequest):
     """Return a dictionary of all set symbol collections.
 
     Args:
         request: HTTP request object.
-        pretty: Whether to format the JSON response for readability.
 
     Returns:
-        A dictionary where keys are the symbol code, values are URI maps from 'SymbolCollectionSet' resources.
+        dict[str, SetSymbolURI]: A dictionary where keys are the symbol code, values are URI maps from
+            'SymbolCollectionSet' resources.
     """
-    obj = {n.code: n.get_symbol_uri_map() for n in SymbolCollectionSet.objects.all()}
-    return JsonResponse(obj, json_dumps_params={'indent': 2}) if pretty else obj
+    return {n.code: n.get_symbol_uri_map() for n in SymbolCollectionSet.objects.all()}
 
 
 @api.get('set/{code}', **schema_or_error(SetSymbolURI))
-def get_symbol_set(request: HttpRequest, code: str, pretty: bool = False):
+def get_symbol_set(request: HttpRequest, code: str):
     """Returns a URI map for a 'SymbolCollectionSet' resource.
 
     Args:
         request: HTTP request object.
         code: 'SymbolCollectionSet' identifier code or 'Set' identifier code.
-        pretty: Whether to format the JSON output for readability.
 
     Returns:
-        A URI map from a 'SymbolCollectionSet' if located, otherwise an 'ErrorResponse'.
+        SetSymbolURI: A URI map from a 'SymbolCollectionSet' object.
     """
     with suppress(Exception):
         # Return found symbol
-        obj = search_symbol_set(code).get_symbol_uri_map()
-        return JsonResponse(obj, json_dumps_params={'indent': 2}) if pretty else obj
+        return search_symbol_set(code).get_symbol_uri_map()
 
     # Code not recognized
     return get_error_response(
@@ -176,6 +173,9 @@ def get_symbol_set_rarity(request: HttpRequest, code: str, rarity: str):
         request: HTTP request object.
         code: Symbol code the symbol is defined by, or code the parent set is defined by.
         rarity: The rarity version of the symbol to return.
+
+    Returns:
+        FileResponse: The requested watermark SVG file asset.
     """
     # Return a default symbol if code is unrecognized
     try:
@@ -213,24 +213,22 @@ def get_symbol_set_rarity(request: HttpRequest, code: str, rarity: str):
 
 
 @api.get('watermark', **schema_or_error(WatermarkSymbolURI))
-def get_symbol_watermark_all(request: HttpRequest, pretty: bool = False):
+def get_symbol_watermark_all(request: HttpRequest):
     """Return a dictionary of all watermark symbol URI's.
 
     Args:
         request: HTTP request object.
-        pretty: Whether to format the JSON response for readability.
 
     Returns:
-        A dictionary where keys are the symbol name, values are URI to the SVG resource.
+        WatermarkSymbolURI: A dictionary containing named watermarks and set symbol watermarks.
     """
-    obj = WatermarkSymbolURI(
+    return WatermarkSymbolURI(
         watermarks={
             n.name: n.get_symbol_uri() for n in
             SymbolCollectionWatermark.objects.filter(parent_symbol_set__isnull=True)},
         watermarks_set={
             n.parent_symbol_set.code: n.get_symbol_uri() for n in
             SymbolCollectionWatermark.objects.filter(parent_symbol_set__isnull=False)})
-    return JsonResponse(obj.dict(), json_dumps_params={'indent': 2}) if pretty else obj
 
 
 @api.get('watermark/set/{code}', **schema_or_error(type[FileResponse]))
@@ -240,6 +238,9 @@ def get_symbol_watermark_set(request: HttpRequest, code: str):
     Args:
         request: HTTP request object.
         code: Symbol code the symbol is defined by, or code the parent set is defined by.
+
+    Returns:
+        FileResponse: The requested watermark SVG file asset.
     """
     try:
         # Try finding a 'Set' watermark
@@ -270,6 +271,9 @@ def get_symbol_watermark(request: HttpRequest, name: str):
     Args:
         request: HTTP request object.
         name: Symbol name the symbol is defined by.
+
+    Returns:
+        FileResponse: The requested watermark SVG file asset.
     """
     try:
         # Try finding a regular watermark

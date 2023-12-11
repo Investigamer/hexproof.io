@@ -7,7 +7,7 @@ from contextlib import suppress
 # Third Party Imports
 import yarl
 from django.db.models import Model, TextChoices, ForeignKey, SET_NULL
-from django.db.models.fields import TextField, IntegerField, BooleanField, DateField
+from django.db.models.fields import TextField, IntegerField, BooleanField, DateField, CharField
 
 # Local Imports
 import hexproof.sources.mtgjson.types as MTJ
@@ -61,35 +61,35 @@ class Set(Model):
     """
 
     # Set Model Block
-    block = TextField(default='', blank=True)
-    block_code = TextField(default='', blank=True)
+    block = TextField(blank=True, null=True, default='')
+    block_code = CharField(max_length=255, blank=True, null=True, default='')
 
     # Set Model Codes
-    code = TextField(unique=True)
-    code_alt = TextField(blank=True)
-    code_arena = TextField(blank=True)
-    code_keyrune = TextField(blank=True)
-    code_mtgo = TextField(blank=True)
-    code_parent = TextField(blank=True)
+    code = CharField(max_length=255, unique=True)
+    code_alt = CharField(max_length=255, blank=True, default='')
+    code_arena = CharField(max_length=255, blank=True, default='')
+    code_keyrune = CharField(max_length=255, blank=True, default='')
+    code_mtgo = CharField(max_length=255, blank=True, default='')
+    code_parent = CharField(max_length=255, blank=True, default='')
 
     # Set Model Counts
     count_cards = IntegerField()
-    count_printed = IntegerField(null=True, blank=True)
+    count_printed = IntegerField(blank=True, null=True)
     count_tokens = IntegerField(default=0)
 
     # Set Model Dates
     date_released = DateField()
 
     # Set Model ID's
-    id_cardmarket = IntegerField(null=True, blank=True, default=None)
-    id_cardmarket_extras = IntegerField(null=True, blank=True, default=None)
-    id_cardsphere = IntegerField(null=True, blank=True, default=None)
+    id_cardmarket = IntegerField(blank=True, null=True, default=None)
+    id_cardmarket_extras = IntegerField(blank=True, null=True, default=None)
+    id_cardsphere = IntegerField(blank=True, null=True, default=None)
     id_oracle = TextField(unique=True)
-    id_tcgplayer = IntegerField(null=True, blank=True, default=None)
+    id_tcgplayer = IntegerField(blank=True, null=True, default=None)
 
     # Set Model Names
     name = TextField()
-    name_cardmarket = TextField(blank=True)
+    name_cardmarket = TextField(blank=True, default='')
 
     # Set Model Flags
     is_digital_only = BooleanField(default=False)
@@ -106,7 +106,7 @@ class Set(Model):
     symbol = ForeignKey(SymbolCollectionSet, on_delete=SET_NULL, null=True, default=None)
 
     # Other Properties
-    type = TextField(choices=SetTypeChoices.choices, default=SetTypeChoices.EXPANSION)
+    type = CharField(max_length=255, choices=SetTypeChoices.choices, default=SetTypeChoices.EXPANSION)
 
     """
     * Core Model Methods
@@ -172,27 +172,27 @@ class Set(Model):
 
         # Return the formatted schema
         return SetSchema(
-            block=self.block,
-            block_code=self.block_code,
+            block=self.block or None,
+            block_code=self.block_code or None,
             code=self.code,
-            code_alt=self.code_alt,
-            code_arena=self.code_arena,
-            code_keyrune=self.code_keyrune,
-            code_mtgo=self.code_mtgo,
-            code_parent=self.code_parent,
+            code_alt=self.code_alt or None,
+            code_arena=self.code_arena or None,
+            code_keyrune=self.code_keyrune or None,
+            code_mtgo=self.code_mtgo or None,
+            code_parent=self.code_parent or None,
             code_symbol=symbol_code,
             count_cards=self.count_cards,
-            count_printed=self.count_printed,
+            count_printed=self.count_printed or None,
             count_tokens=self.count_tokens,
             date_released=self.date_released.strftime('%Y-%m-%d'),
             flags=self.flags,
             id=self.id_oracle,
-            id_cardmarket=self.id_cardmarket,
-            id_cardmarket_extras=self.id_cardmarket_extras,
-            id_cardsphere=self.id_cardsphere,
-            id_tcgplayer=self.id_tcgplayer,
+            id_cardmarket=self.id_cardmarket or None,
+            id_cardmarket_extras=self.id_cardmarket_extras or None,
+            id_cardsphere=self.id_cardsphere or None,
+            id_tcgplayer=self.id_tcgplayer or None,
             name=self.name,
-            name_cardmarket=self.name_cardmarket,
+            name_cardmarket=self.name_cardmarket or None,
             type=self.type,
             uris_scryfall=self.uris_scryfall,
             uris_symbol=symbol_map
