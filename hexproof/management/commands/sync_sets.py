@@ -26,9 +26,16 @@ from hexproof.utils.project import get_current_version
 class Command(BaseCommand):
     help = "Rebuilds the 'Set' Model table using latest Set object data."
 
-    def handle(self, *args, **kwargs):
+    def add_arguments(self, parser):
+        parser.add_argument('--clear', action='store_true')
+        parser.add_argument('--force', action='store_true')
+
+    def handle(self, *args, **options):
         """Compiles the database table for the 'Set' model."""
-        # TODO: Add optional arg to drop entire set table and insert from scratch
+
+        # Clear table if 'clear' arg was passed
+        if options.get('clear'):
+            Set.objects.all().delete()
 
         # Check current metadata to see if sets are up-to-date
         JSON_meta: MTJ.Meta = MTJ.get_meta()
@@ -37,8 +44,10 @@ class Command(BaseCommand):
         except ObjectDoesNotExist:
             mtgjson_resource = Meta.objects.create(resource='mtgjson', uri=str(MTJ.MTJ_URL.API_META))
         if mtgjson_resource.version_formatted == JSON_meta.get('version'):
-            print("MTGJSON data already up-to-date!")
-            return
+            # Process the commend anyway if 'force' arg was passed
+            if not options.get('force'):
+                print("MTGJSON data already up-to-date!")
+                return
 
         # Pull the latest Scryfall and MTGJSON data
         JSON_data: dict[str, MTJ.SetList] = {d['code']: d for d in MTJ.get_set_list()}

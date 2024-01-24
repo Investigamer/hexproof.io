@@ -100,6 +100,22 @@ def get_file_size_mb(file_path: Union[str, os.PathLike], decimal: int = 1) -> fl
 """
 
 
+def validate_data_type(path: Path) -> None:
+    """Checks if a data file matches a supported data file type.
+
+    Args:
+        path: Path to the data file.
+
+    Raises:
+        ValueError: If data file type not supported.
+    """
+    # Check if data file is a supported data type
+    if path.suffix.lower() not in supported_data_types:
+        raise ValueError("Data file provided does not match a supported data file type.\n"
+                         f"Types supported: {', '.join(supported_data_types)}\n"
+                         f"Type received: {path.suffix}")
+
+
 def validate_data_file(path: Path) -> None:
     """Checks if a data file exists and is a valid data file type. Raises an exception if validation fails.
 
@@ -112,13 +128,8 @@ def validate_data_file(path: Path) -> None:
     """
     # Check if file exists
     if not path.is_file():
-        raise FileNotFoundError(f"Data file doesn't exist on the server:\n{str(path)}")
-
-    # Check if data file is a supported data type
-    if path.suffix.lower() not in supported_data_types:
-        raise ValueError("Data file provided does not match a supported data file type.\n"
-                         f"Types supported: {', '.join(supported_data_types)}\n"
-                         f"Type received: {path.suffix}")
+        raise FileNotFoundError(f"Data file does not exist:\n{str(path)}")
+    validate_data_type(path)
 
 
 def load_data_file(
@@ -144,11 +155,12 @@ def load_data_file(
 
     # Pull the parser and insert user config into kwargs
     parser: DataFileType = data_types.get(path.suffix.lower(), {}).copy()
-    kwargs = parser['load_kw'].update(config) if config else parser['load_kw']
+    if config:
+        parser['load_kw'].update(config)
 
     # Attempt to load data
     with util_file_lock, suppress(Exception), open(path, 'r', encoding='utf-8') as f:
-        data = parser['load'](f, **kwargs) or {}
+        data = parser['load'](f, **parser['load_kw']) or {}
         return data
     raise OSError(f"Unable to load data from data file:\n{str(path)}")
 
@@ -171,13 +183,15 @@ def dump_data_file(
         OSError: If dumping to data file fails.
     """
     # Check if data file is valid
-    validate_data_file(path)
+    validate_data_type(path)
 
     # Pull the parser and insert user config into kwargs
     parser: DataFileType = data_types.get(path.suffix.lower(), {}).copy()
-    kwargs = parser['dump_kw'].update(config) if config else parser['dump_kw']
+    if config:
+        parser['dump_kw'].update(config)
 
     # Attempt to dump data
     with suppress(Exception), util_file_lock, open(path, 'w', encoding='utf-8') as f:
-        parser['dump'](obj, f, **kwargs)
+        parser['dump'](obj, f, **parser['dump_kw'])
+        return
     raise OSError(f"Unable to dump data from data file:\n{str(path)}")
