@@ -6,34 +6,49 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 """
 # Standard Library Imports
-import json
-from contextlib import suppress
+import shutil
 from pathlib import Path
 
 # Third Party Imports
-import dotenv
-
-# Local Imports
-from hexproof.utils.strings import str_to_bool_safe
+from omnitils.files import load_data_file
+from omnitils.strings import str_to_bool_safe
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-DB_CFG = BASE_DIR / 'db.json'
+ENV_PATH = BASE_DIR / '.env'
 
-# Load .env values
-ENV = dotenv.dotenv_values(BASE_DIR / '.env')
+# Load environment variables
+if not ENV_PATH.is_file():
+    shutil.copy2(ENV_PATH.with_stem('.env.dist'), ENV_PATH)
+ENV = environ.Env(
+    DEBUG=(bool, False),
+    SECRET_KEY=(str, 'super-secret-django-key'),
+    TIMEZONE=(str, 'America/Chicago')
+)
+environ.Env.read_env(ENV_PATH)
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = ENV.get('SECRET_KEY', 'super-secret-django-key')
+SECRET_KEY = ENV('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = str_to_bool_safe(ENV.get('DEBUG', 'False'))
+DEBUG = ENV('DEBUG')
 
-ALLOWED_HOSTS = ENV.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# Hosts allowed access
+ALLOWED_HOSTS = ENV.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
+# CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = ENV.list(
+    "CSRF_TRUSTED_ORIGINS",
+    # Required for Docker with Django 4.x+
+    # May need custom assignments for advanced docker networks
+    default=[
+        "http://localhost:8000",
+        "http://127.0.0.1:8000"
+    ]
+)
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -41,20 +56,54 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'hexproof'
+    'api'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'core.middleware.SubdomainRoutesMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'hexproof': {
+            'class': 'api.utils.logger.LoguruHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['hexproof'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['hexproof'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'handlers': ['hexproof'],
+            'level': 'INFO',
+            'propagate': False,
+        }
+    }
+}
+
 ROOT_URLCONF = 'core.urls'
+
+SUBDOMAIN_ROUTES = {
+    'cdn': 'cdn.urls',
+    '*': 'core.urls',
+}
 
 TEMPLATES = [
     {
@@ -78,17 +127,15 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "db.sqlite3"
+    'default': {
+        'ENGINE': ENV('DB_ENGINE', default='django.db.backends.postgresql'),
+        'NAME': ENV('DB_NAME', default='hexproof'),
+        'USER': ENV('DB_USER', default='hexproof'),
+        'PASSWORD': ENV('DB_PASS', default='hexproof'),
+        'HOST': ENV('DB_HOST', default='localhost'),
+        'PORT': ENV.int('DB_PORT', default=5432)
     }
 }
-
-# Load User Configured Database if provided
-if DB_CFG.is_file():
-    with suppress(Exception), open(DB_CFG, 'r', encoding='utf-8') as f:
-        db = json.load(f)
-        DATABASES = db or DATABASES
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -114,7 +161,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = ENV('TIMEZONE')
 
 USE_I18N = True
 
@@ -125,6 +172,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'staticfiles'
+]
 STATIC_ROOT = BASE_DIR / 'static'
 
 # Default primary key field type
