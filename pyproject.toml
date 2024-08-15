@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hexproof.io"
-version = "0.1.0"
+version = "1.0.0"
 description = "A comprehensive Magic the Gathering data and resources API."
 authors = ["Investigamer <freethoughtleft@gmail.com>"]
 license = "MPL-2.0"
@@ -42,7 +42,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.commitizen]
-version = "0.1.0"
+version = "1.0.0"
 tag_format = "$major.$minor.$patch"
 update_changelog_on_bump = true
 version_files = [
