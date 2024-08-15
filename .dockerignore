@@ -1,0 +1,17 @@
+.cache
+.dockerignore
+.env
+.git
+.gitattributes
+.gitignore
+.gitmodules
+.idea
+.venv
+py.typed
+static
+hexproof/.venv
+hexproof/.git
+hexproof/.gitattributes
+hexproof/.gitignore
+hexproof/.idea
+docker/docker-compose.local.yml

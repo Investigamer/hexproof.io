@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "hexproof"
+name = "hexproof.io"
 version = "0.1.0"
 description = "A comprehensive Magic the Gathering data and resources API."
 authors = ["Investigamer <freethoughtleft@gmail.com>"]
@@ -8,24 +8,30 @@ readme = "README.md"
 keywords = ["hexproof", "Magic the Gathering", "Magic", "mtg", "scryfall", "mtgjson", "python"]
 classifiers = [
     "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
 
+[[tool.poetry.packages]]
+include = "api"
+
 [tool.poetry.dependencies]
-python = ">=3.8.0,<3.13.0"
+python = ">=3.10.0,<3.13.0"
 requests = "^2.31.0"
 gunicorn = "^21.2.0"
-bs4 = "^0.0.1"
+bs4 = "^0.0.2"
 ratelimit = "^2.2.1"
 pyyaml = "^6.0.1"
 backoff = "^2.2.1"
 yarl = "^1.9.3"
 django-ninja = "^1.0.1"
 python-dotenv = "^1.0.0"
-
+omnitils = { git = "https://github.com/Investigamer/omnitils.git", tag = "1.2.4" }
+hexproof = { path = "./hexproof", develop = true }
+click = "^8.1.7"
+psycopg2 = "^2.9.9"
+django-environ = "^0.11.2"
 
 [tool.poetry.group.dev.dependencies]
 commitizen = "^3.12.0"
@@ -37,8 +43,11 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.commitizen]
 version = "0.1.0"
-tag_format = "v$version"
+tag_format = "$major.$minor.$patch"
 update_changelog_on_bump = true
 version_files = [
     "pyproject.toml:version"
 ]
+
+[tool.poetry.scripts]
+hexadmin = 'api.cli:HexproofCLI'

@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+
+  hexproof-api:
+    image: investigamer/hexproof-api:latest
+    container_name: hexproof-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Cache directory for data files pulled from Scryfall, MTGJSON, etc
+      - "path/to/.cache:/app/.cache"
+    environment:
+      # Overwrite .env values here
+      - SECRET_KEY=my-super-cool-secret-key
+      - DEBUG=false
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - CSRF_TRUSTED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=hexproof
+      - DB_USER=hexproof
+      - DB_PASS=hexproof
+      - DB_HOST=localhost
+      - DB_PORT=5432
+      - URL_API=https://mydomain.com
+      - URL_CDN=https://cdn.mydomain.com
+      - AUTH_GITHUB=
+      - MTG_VECTORS=Investigamer/mtg-vectors
+      - TIMEZONE=America/Chicago
