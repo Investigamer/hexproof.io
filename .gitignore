@@ -159,6 +159,5 @@ static
 .cache/
 db.json
 static/
-hexproof/
 docker/docker-compose.local.yml
 .idea/
