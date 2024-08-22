@@ -1,3 +1,4 @@
 [submodule "hexproof"]
 	path = hexproof
 	url = https://github.com/Investigamer/hexproof.git
+	branch = main
