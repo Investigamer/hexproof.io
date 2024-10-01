@@ -10,11 +10,18 @@ from django.templatetags.static import static
 from django.urls import path
 from django.views.generic import RedirectView
 
-from api.routes import APIRouter
+# Local Imports
+from api.routes import main_router
 
 # App-wide URL routing
 urlpatterns = [
+
+    # Known static files
     path("favicon.ico", RedirectView.as_view(url=static("favicon.ico"))),
+
+    # Administration page
     path('admin/', admin.site.urls),
-    path('', APIRouter.urls)
+
+    # REST API routes
+    path('', main_router.urls)
 ]

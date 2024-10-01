@@ -3,20 +3,19 @@
 """
 # Standard Library Imports
 from enum import IntEnum
-from typing import Any, Optional, Union
-from typing_extensions import TypedDict
+from typing import Any, Optional, Union, TypedDict
 
 # Third Party Imports
+from django.http import HttpResponseBase
 from ninja import Schema
-from django.http import HttpResponse
-
+from pydantic import BaseModel
 
 """
-* Schemas
+* Types / Enums
 """
 
 
-class ErrorStatus(IntEnum):
+class StatusCode(IntEnum):
     """Enumerates the potential error reasons for `get/key/`."""
     BadRequest = 400
     Forbidden = 403
@@ -28,13 +27,25 @@ class ErrorStatus(IntEnum):
     BadGateway = 502
 
 
+"""
+* Schemas
+"""
+
+
 class ErrorResponse(Schema):
     """Defines the object structure of an error response."""
     object: str = 'error'
-    status: ErrorStatus = ErrorStatus.NotFound
+    status: StatusCode = StatusCode.NotFound
     details: str = 'Resource not found!'
     warnings: Optional[list[str]] = None
     data: Optional[dict[str, Any]] = None
+
+
+# Error status codes
+ErrorStatuses = {int(x): ErrorResponse for x in StatusCode if x != 200}
+
+# Endpoint response
+APIResponse = Union[type[dict], type[TypedDict], type[BaseModel], type[HttpResponseBase]]
 
 
 class MessageResponse(Schema):
@@ -46,7 +57,7 @@ class MessageResponse(Schema):
 
 class SchemaOrErrorWithExclusions(TypedDict):
     """Kwargs used for an API endpoint to return a schema or an error response."""
-    response: dict[int, Union[type[TypedDict], type[Schema], type[HttpResponse]]]
+    response: dict[int, APIResponse]
     exclude_none: bool
     exclude_unset: bool
     exclude_defaults: bool
@@ -58,12 +69,12 @@ class SchemaOrErrorWithExclusions(TypedDict):
 
 
 def schema_or_error(
-    schema: Union[type[TypedDict], type[Schema], type[HttpResponse]],
+    schema: APIResponse,
     exclude_none: bool = True,
     exclude_unset: bool = True,
     exclude_defaults: bool = False
-) -> SchemaOrErrorWithExclusions:
-    """Creates a response that returns a schema on OK status code, otherwise an ErrorStatus.
+) -> dict[str, Any]:
+    """Creates a response that returns a schema on OK status code, or an error response on error status code.
 
     Args:
         schema: Schema to return on a 200 status code.
@@ -74,16 +85,16 @@ def schema_or_error(
     Returns:
         A django-ninja response dict mapping the given schema to 200 status code, and 'ErrorResponse' to all others.
     """
-    return {
-        'response': {200: schema, ErrorStatus: ErrorResponse},
-        'exclude_none': exclude_none,
-        'exclude_unset': exclude_unset,
-        'exclude_defaults': exclude_defaults
-    }
+    return SchemaOrErrorWithExclusions(
+        response={200: schema, **ErrorStatuses},
+        exclude_none=exclude_none,
+        exclude_unset=exclude_unset,
+        exclude_defaults=exclude_defaults
+    )
 
 
 def get_error_response(
-        status: ErrorStatus = ErrorStatus.NotFound,
+        status: StatusCode = StatusCode.NotFound,
         details: str = 'Resource not found on the server!',
         warnings: Optional[list[str]] = None,
         data: Optional[dict[str, Any]] = None
@@ -91,7 +102,7 @@ def get_error_response(
     """Returns a tuple containing a status code and a formatted 'ErrorResponse' schema.
 
     Args:
-        status: A status code integer (usually from ErrorStatus enum).
+        status: A status code integer (usually from StatusCode enum).
         details: A string describing the details of the error.
         warnings: An optional list of specific warnings related to the error.
         data: An optional dictionary containing any relevant related to the error, usually for testing.

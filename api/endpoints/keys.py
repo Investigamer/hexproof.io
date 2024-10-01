@@ -12,17 +12,17 @@ from hexproof.hexapi import schema as Hexproof
 
 # Local Imports
 from api.models import APIKey
-from api.utils.response import schema_or_error, ErrorStatus, get_error_response
+from api.utils.response import schema_or_error, StatusCode, get_error_response
 
 # Django Ninja Objects
-api = Router()
+router = Router()
 
 """
 * Endpoints
 """
 
 
-@api.get("{name}", **schema_or_error(Hexproof.APIKey))
+@router.get("{name}", **schema_or_error(Hexproof.APIKey))
 def get_key(request: HttpRequest, name: str):
     """Retrieve an API key that is currently active.
 
@@ -41,10 +41,10 @@ def get_key(request: HttpRequest, name: str):
         if k.active:
             return k._api_obj
         return get_error_response(
-            status=ErrorStatus.Disabled,
+            status=StatusCode.Disabled,
             details=f"API key '{name}' is disabled!")
 
     # Key couldn't be located
     return get_error_response(
-        status=ErrorStatus.NotFound,
+        status=StatusCode.NotFound,
         details=f"API key '{name}' not found!")

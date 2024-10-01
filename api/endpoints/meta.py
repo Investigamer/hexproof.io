@@ -12,17 +12,17 @@ from hexproof.hexapi import schema as Hexproof
 
 # Local Imports
 from api.models import Meta
-from api.utils.response import ErrorStatus, schema_or_error, get_error_response
+from api.utils.response import StatusCode, schema_or_error, get_error_response
 
 # Django Ninja Objects
-api = Router()
+router = Router()
 
 """
 * Endpoints
 """
 
 
-@api.get("", **schema_or_error(dict[str, Hexproof.Meta]))
+@router.get("", **schema_or_error(dict[str, Hexproof.Meta]))
 def get_meta_all(request: HttpRequest):
     """Retrieve a dictionary of all resource metas.
 
@@ -35,7 +35,7 @@ def get_meta_all(request: HttpRequest):
     return {n.resource: n._api_obj for n in Meta.objects.all()}
 
 
-@api.get("{resource}", **schema_or_error(Hexproof.Meta))
+@router.get("{resource}", **schema_or_error(Hexproof.Meta))
 def get_meta(request: HttpRequest, resource: str):
     """Retrieve a dictionary of all resource metas.
 
@@ -53,5 +53,5 @@ def get_meta(request: HttpRequest, resource: str):
 
     # Meta resource not found
     return get_error_response(
-        status=ErrorStatus.NotFound,
+        status=StatusCode.NotFound,
         details=f"Metadata matching resource name '{resource}' not found.")
