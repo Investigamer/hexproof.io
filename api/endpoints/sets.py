@@ -8,24 +8,23 @@ from contextlib import suppress
 # Third Party Imports
 from ninja import Router
 from django.http import HttpRequest
+from hexproof.hexapi import schema as Hexproof
 from omnitils.files import load_data_file
 
-from api.apps import HexproofConfig
-from hexproof.hexapi import schema as Hexproof
-
 # Local Imports
+from api.apps import HexproofConfig
 from api.models import Set
-from api.utils.response import ErrorStatus, schema_or_error, get_error_response
+from api.utils.response import StatusCode, schema_or_error, get_error_response
 
 # Django Ninja Objects
-api = Router()
+router = Router()
 
 """
 * API Endpoints
 """
 
 
-@api.get('', **schema_or_error(dict[str, Hexproof.Set]))
+@router.get('', **schema_or_error(dict[str, Hexproof.Set]))
 def all_sets(request: HttpRequest):
     """Returns a dictionary of data objects for all sets by code."""
 
@@ -36,7 +35,7 @@ def all_sets(request: HttpRequest):
     return {d.code: d._api_obj for d in Set.objects.all()}
 
 
-@api.get('{code}', **schema_or_error(Hexproof.Set))
+@router.get('{code}', **schema_or_error(Hexproof.Set))
 def get_set(request: HttpRequest, code: str):
     """Returns a data object for a specific set."""
     with suppress(Exception):
@@ -47,5 +46,5 @@ def get_set(request: HttpRequest, code: str):
 
     # Set couldn't be located
     return get_error_response(
-        status=ErrorStatus.NotFound,
+        status=StatusCode.NotFound,
         details=f"Set matching code '{code}' not found.")

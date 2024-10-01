@@ -156,7 +156,7 @@ def update_vectors_all(force: bool = False) -> None:
         create_or_update_meta(
             resource=f'mtg-vectors[{name}]',
             uri=_meta.uri,
-            version=_meta.version.split('+')[0],
+            version=_meta.version.split('+')[0].replace('v', ''),
             date=_meta.date)
         HexproofConfig.logger.opt(colors=True).success(
             f'Updated metadata: <bold>mtg-vectors[{name}]</bold> -> {_meta.version}')
