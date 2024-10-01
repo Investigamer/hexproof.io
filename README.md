@@ -9,24 +9,14 @@ We are building out additional image resource endpoints that other APIs seem to 
 resource is our `/symbols/` route that provides set rarity icon and watermark SVG's from a 
 catalogue maintained on the [mtg-vectors](https://github.com/Investigamer/mtg-vectors) repository.
 
-# Setup Guide
-1. We use `poetry` for managing dependencies and packaging. To install poetry:
-    ```shell
-    # 1: Install pipx and ensure path.
-    py -m pip install --user pipx
-    py -m pipx ensurepath
-    
-    # 2: Install poetry.
-    pipx install poetry
-
-    # 3: [Optional] Configure poetry to create virtual environments in-project
-    poetry config virtualenvs.in-project true
-    ```
-2. Clone the `hexproof` repository somewhere on your system and install the project environment with Poetry.
+## Setup Guide
+1. [Install Poetry](https://python-poetry.org/docs/) if you don't have it. We use `poetry` for project management. If 
+you write a lot of Python and have never tried Poetry... trust me, you'll thank me later.
+2. Clone the `hexproof` repository somewhere on your system and install the Poetry environment:
     ```shell
     # 1: Clone and enter the project.
-    git clone https://github.com/Investigamer/hexproof.git
-    cd hexproof
+    git clone https://github.com/Investigamer/hexproof.io.git
+    cd hexproof.io
 
     # 2: Install the poetry environment.
     poetry install
@@ -39,11 +29,31 @@ catalogue maintained on the [mtg-vectors](https://github.com/Investigamer/mtg-ve
     # 2: Initialize database
     python manage.py migrate
 
-    # 2.A: [Optional] Create an admin user for accessing admin page
+    # 3: Collect static files
+    python manage.py collectstatic
+   
+    # 3: [Optional] Create an admin user for accessing admin page
     python manage.py createsuperuser # Follow the prompts
    
-    # 3: Run django test server
+    # 4: Run django test server
     python manage.py runserver
     ```
-4. The project is set up and the test server is running! You can check out the admin page
-at `http://127.0.0.1:8000/admin` or view the API docs at `http://127.0.0.1:8000/docs`.
+4. The project is set up, the test server is running, and the site is accessible at `http://localhost:8000`.
+5. A docs page (using SwaggerUI) is available at `<URL>/docs`, and Django's database administration panel is 
+available at `<URL>/admin`.
+
+## API Endpoints
+### `<URL>/keys/{key-nme}`
+Endpoint for retrieving an API key (currently used by Proxyshop).
+
+### `<URL>/meta/{source-name}`
+Endpoint for fetching "Meta" objects tracking version data for a variety of sources. Omit source name to return all.
+
+### `<URL>/sets/{set-code}`
+Endpoint for accessing Magic the Gathering "Set" object data. Omit set code to return all.
+
+### `<URL>/symbols/set/{set-code | icon-code}`
+Endpoint for accessing "SymbolSet" object data (expansion symbols). Omit code to return all.
+
+### `<URL>/symbols/watermark/{watermark-name}`
+Endpoint for accessing "SymbolWatermark" object data (watermarks). Omit watermark name to return all.

@@ -1,6 +1,7 @@
 """
-* Global Constants
+* Constant Values
 """
+
 REQUEST_HEADER_DEFAULT = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
                   "AppleWebKit/537.36 (KHTML, like Gecko) "
