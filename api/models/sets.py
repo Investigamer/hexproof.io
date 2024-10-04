@@ -314,7 +314,7 @@ class Set(Model):
             block=scryfall.block or (mtgjson.block if mtgjson else None),
             code_mtgo=scryfall.mtgo_code or (mtgjson.mtgoCode if mtgjson else None),
             code_parent=scryfall.parent_set_code or (mtgjson.parentCode if mtgjson else None),
-            count_cards=scryfall.card_count or (mtgjson.totalSetSize if mtgjson else None),
+            count_cards=scryfall.card_count or (mtgjson.totalSetSize if mtgjson else 0),
             count_printed=scryfall.printed_size or (mtgjson.baseSetSize if mtgjson else None),
             date_released=scryfall.released_at or (mtgjson.releaseDate if mtgjson else None),
 
