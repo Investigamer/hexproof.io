@@ -15,7 +15,14 @@ from api.utils.renderer import PrettyJSON
 main_router = NinjaAPI(
     docs_url='/docs/',
     title='Hexproof API',
-    renderer=PrettyJSON())
+    renderer=PrettyJSON(),
+    servers=[
+        dict(
+            url='https://api.hexproof.io',
+            description='Official production server for the Hexproof API.'),
+        dict(
+            url='http://localhost:8000',
+            description='Locally hosted django testing server.')])
 main_router.add_router('/keys/', router_keys)
 main_router.add_router('/meta/', router_meta)
 main_router.add_router('/sets/', router_sets)
