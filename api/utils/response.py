@@ -16,7 +16,9 @@ from pydantic import BaseModel
 
 
 class StatusCode(IntEnum):
-    """Enumerates the potential error reasons for `get/key/`."""
+    """Enumerates response status codes which indicate a successful response or a type of
+        error with the request."""
+    OK = 200
     BadRequest = 400
     Forbidden = 403
     NotFound = 404
@@ -94,15 +96,15 @@ def schema_or_error(
 
 
 def get_error_response(
-        status: StatusCode = StatusCode.NotFound,
-        details: str = 'Resource not found on the server!',
-        warnings: Optional[list[str]] = None,
-        data: Optional[dict[str, Any]] = None
+    status: StatusCode = StatusCode.NotFound,
+    details: str = 'Resource not found on the server!',
+    warnings: Optional[list[str]] = None,
+    data: Optional[dict[str, Any]] = None
 ) -> tuple[int, ErrorResponse]:
     """Returns a tuple containing a status code and a formatted 'ErrorResponse' schema.
 
     Args:
-        status: A status code integer (usually from StatusCode enum).
+        status: A `StatusCode` integer indicating the type of error response.
         details: A string describing the details of the error.
         warnings: An optional list of specific warnings related to the error.
         data: An optional dictionary containing any relevant related to the error, usually for testing.
