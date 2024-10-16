@@ -12,7 +12,7 @@ catalogue maintained on the [mtg-vectors](https://github.com/Investigamer/mtg-ve
 ## Setup Guide
 1. [Install Poetry](https://python-poetry.org/docs/) if you don't have it. We use `poetry` for project management. If 
 you write a lot of Python and have never tried Poetry... trust me, you'll thank me later.
-2. Clone the `hexproof` repository somewhere on your system and install the Poetry environment:
+2. Clone the `hexproof` repository somewhere on your system and install the Poetry environment.
     ```shell
     # 1: Clone and enter the project.
     git clone https://github.com/Investigamer/hexproof.io.git
@@ -21,7 +21,7 @@ you write a lot of Python and have never tried Poetry... trust me, you'll thank 
     # 2: Install the poetry environment.
     poetry install
     ```
-3. Initialize the database and run the django test server:
+3. Initialize the database and run the django test server.
     ```shell
     # 1: Enter poetry environment
     poetry shell
@@ -38,22 +38,22 @@ you write a lot of Python and have never tried Poetry... trust me, you'll thank 
     # 4: Run django test server
     python manage.py runserver
     ```
-4. The project is set up, the test server is running, and the site is accessible at `http://localhost:8000`.
-5. A docs page (using SwaggerUI) is available at `<URL>/docs`, and Django's database administration panel is 
-available at `<URL>/admin`.
+4. The project is set up, the test server is running, and the site is accessible at 
+[http://localhost:8000](http://localhost:8000). The auto-generated docs page (using SwaggerUI) is available at `/docs/`, 
+and Django's database administration panel is available at `/admin/`.
 
 ## API Endpoints
-### `<URL>/keys/{key-nme}`
+### `/keys/{key-name}`
 Endpoint for retrieving an API key (currently used by Proxyshop).
 
-### `<URL>/meta/{source-name}`
+### `/meta/{source-name}`
 Endpoint for fetching "Meta" objects tracking version data for a variety of sources. Omit source name to return all.
 
-### `<URL>/sets/{set-code}`
+### `/sets/{set-code}`
 Endpoint for accessing Magic the Gathering "Set" object data. Omit set code to return all.
 
-### `<URL>/symbols/set/{set-code | icon-code}`
+### `/symbols/set/{set-code | icon-code}`
 Endpoint for accessing "SymbolSet" object data (expansion symbols). Omit code to return all.
 
-### `<URL>/symbols/watermark/{watermark-name}`
+### `/symbols/watermark/{watermark-name}`
 Endpoint for accessing "SymbolWatermark" object data (watermarks). Omit watermark name to return all.
