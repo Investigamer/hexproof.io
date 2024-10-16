@@ -1,3 +1,26 @@
+## 1.1.0 (2024-10-15)
+
+### Feat
+
+- **whitenoise**: Integrate whitenoise for serving static files via gunicorn
+
+### Fix
+
+- **docker**: Ensure pipx is added to PATH
+- **schema**: Ensure card_count falls back to 0 if not provided by scryfall or mtgjson
+
+### Refactor
+
+- **StatusCode**: Add OK status code "200"
+- **docker**: Optimize Dockerfile, remove deprecated dockerignore targets
+- **api**: Minor changes to response object schemas
+- **poetry,readme**: Update project dependencies, update README
+- **cli/update**: Remove "v" from mtg-vectors metadata version
+- **hexproof**: Update submodule
+- **submodule**: Ensure we use the "main" branch submodule hexproof
+- **submodule**: Update hexproof
+- **submodule**: Add hexproof submodule to repository
+
 ## 1.0.0 (2024-08-15)
 
 ### Feat
