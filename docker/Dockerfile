@@ -2,6 +2,7 @@ FROM python:3.12.5-bookworm
 
 # Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1
+ENV PATH=/root/.local/bin:$PATH
 
 # Update, install and configure system dependencies
 RUN apt update && apt install dos2unix -y && \
