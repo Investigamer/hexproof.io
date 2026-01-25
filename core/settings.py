@@ -10,8 +10,6 @@ import shutil
 from pathlib import Path
 
 # Third Party Imports
-from omnitils.files import load_data_file
-from omnitils.strings import str_to_bool_safe
 import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -55,6 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.postgres',
     'django.contrib.staticfiles',
     'api'
 ]
