@@ -10,11 +10,11 @@ import yarl
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Model, TextChoices, ForeignKey, SET_NULL
 from django.db.models.fields import TextField, IntegerField, BooleanField, DateField, CharField
-from hexproof.scryfall.enums import ScryURL, SetType
-from hexproof.hexapi import schema as Hexproof
-from hexproof.mtgjson import schema as MTGJson
-from hexproof.scryfall import schema as Scryfall
-from hexproof.scryfall import get_url_base, get_icon_code
+from hexproof.providers.scryfall import ScryURL, SetType
+from hexproof.providers.hexapi import schema as Hexproof
+from hexproof.providers.mtgjson import schema as MTGJson
+from hexproof.providers.scryfall import schema as Scryfall
+from hexproof.providers.scryfall import get_url_base, get_icon_code
 from ninja import Schema
 from omnitils.files import load_data_file
 
@@ -172,10 +172,10 @@ class Set(Model):
     def uris_scryfall(self) -> Hexproof.SetURIScryfall:
         """Object containing Scryfall related URI's."""
         return Hexproof.SetURIScryfall(
-            object=str(ScryURL.API.Sets.All / self.id_scryfall),
-            page=str(ScryURL.Site.Sets / self.code),
-            parent=str(ScryURL.API.Sets.All / self.code_parent) if self.code_parent else None,
-            search=str(ScryURL.API.Cards.Search.with_query({
+            object=str(ScryURL.API_SETS / self.id_scryfall),
+            page=str(ScryURL.SITE_SETS / self.code),
+            parent=str(ScryURL.API_SETS / self.code_parent) if self.code_parent else None,
+            search=str(ScryURL.API_CARDS_SEARCH.with_query({
                 'q': f'e:{self.code}',
                 'include_extras': 'true',
                 'include_variations': 'true',

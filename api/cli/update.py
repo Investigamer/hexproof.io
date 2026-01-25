@@ -7,12 +7,12 @@ from concurrent.futures import ThreadPoolExecutor
 
 # Third Party Imports
 import click
-from hexproof.mtgjson import fetch as MJsonFetch
-from hexproof.mtgjson import schema as MJson
-from hexproof.mtgjson.enums import MTGJsonURL
-from hexproof.scryfall import fetch as ScryFetch
-from hexproof.scryfall.enums import ScryURL
-from hexproof.vectors import fetch as VectorsFetch
+from hexproof.providers.mtgjson import fetch as MJsonFetch
+from hexproof.providers.mtgjson import schema as MJson
+from hexproof.providers.mtgjson import MTGJsonURL
+from hexproof.providers.scryfall import fetch as ScryFetch
+from hexproof.providers.scryfall import ScryURL
+from hexproof.providers.vectors import fetch as VectorsFetch
 from omnitils.files import load_data_file
 
 # Local Imports
@@ -69,7 +69,7 @@ def update_mtgjson_all(force: bool = False) -> None:
     # Save new MTGJSON 'Meta'
     create_or_update_meta(
         resource='mtgjson',
-        uri=str(MTGJsonURL.BulkJSON.Meta),
+        uri=str(MTGJsonURL.API_META),
         version=''.join(_meta.version.split('+')[:-1]),
         date=_meta.date)
     HexproofConfig.logger.info('MTGJSON data updated!')
@@ -104,7 +104,7 @@ def update_scryfall_all(force: bool = False) -> None:
     # Update Scryfall meta
     create_or_update_meta(
         resource='scryfall',
-        uri=str(ScryURL.API.Bulk.All))
+        uri=str(ScryURL.API_BULK))
     HexproofConfig.logger.info('Scryfall data updated!')
 
 

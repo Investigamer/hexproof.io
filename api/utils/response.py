@@ -37,14 +37,71 @@ class StatusCode(IntEnum):
 class ErrorResponse(Schema):
     """Defines the object structure of an error response."""
     object: str = 'error'
-    status: StatusCode = StatusCode.NotFound
-    details: str = 'Resource not found!'
+    status: StatusCode
+    details: str
     warnings: Optional[list[str]] = None
     data: Optional[dict[str, Any]] = None
 
 
+class ErrorResponseBadRequest(ErrorResponse):
+    """ErrorResponse for a 400 status code."""
+    status: StatusCode = StatusCode.BadRequest
+    details: str = 'Resource not found!'
+
+
+class ErrorResponseForbidden(ErrorResponse):
+    """ErrorResponse for a 403 status code."""
+    status: StatusCode = StatusCode.Forbidden
+    details: str = 'Insufficient permissions to access this resource!'
+
+
+class ErrorResponseNotFound(ErrorResponse):
+    """ErrorResponse for a 404 status code."""
+    status: StatusCode = StatusCode.NotFound
+    details: str = 'Resource not found!'
+
+
+class ErrorResponseDisabled(ErrorResponse):
+    """ErrorResponse for a 405 status code."""
+    status: StatusCode = StatusCode.Disabled
+    details: str = 'The requested method is disabled for this resource!'
+
+
+class ErrorResponseGone(ErrorResponse):
+    """ErrorResponse for a 410 status code."""
+    status: StatusCode = StatusCode.Gone
+    details: str = 'This resource was permanently retired!'
+
+
+class ErrorResponseServer(ErrorResponse):
+    """ErrorResponse for a 500 status code."""
+    status: StatusCode = StatusCode.Server
+    details: str = 'A server-side error was encountered!'
+
+
+class ErrorResponseNotImplemented(ErrorResponse):
+    """ErrorResponse for a 501 status code."""
+    status: StatusCode = StatusCode.NotImplemented
+    details: str = "The requested resource hasn't been implemented yet!"
+
+
+class ErrorResponseBadGateway(ErrorResponse):
+    """ErrorResponse for a 502 status code."""
+    status: StatusCode = StatusCode.BadGateway
+    details: str = 'An upstream server-side error was encountered!'
+
+
 # Error status codes
-ErrorStatuses = {int(x): ErrorResponse for x in StatusCode if x != 200}
+ErrorStatuses: dict[int, type[ErrorResponse]] = {
+    400: ErrorResponseBadRequest,
+    403: ErrorResponseForbidden,
+    404: ErrorResponseNotFound,
+    405: ErrorResponseDisabled,
+    410: ErrorResponseGone,
+    500: ErrorResponseServer,
+    501: ErrorResponseNotImplemented,
+    502: ErrorResponseBadGateway
+}
 
 # Endpoint response
 APIResponse = Union[type[dict], type[TypedDict], type[BaseModel], type[HttpResponseBase]]
@@ -74,8 +131,9 @@ def schema_or_error(
     schema: APIResponse,
     exclude_none: bool = True,
     exclude_unset: bool = True,
-    exclude_defaults: bool = False
-) -> dict[str, Any]:
+    exclude_defaults: bool = False,
+    errors: list[StatusCode] | None = None
+) -> SchemaOrErrorWithExclusions:
     """Creates a response that returns a schema on OK status code, or an error response on error status code.
 
     Args:
@@ -83,30 +141,16 @@ def schema_or_error(
         exclude_none: Whether to exclude 'None' values from the response schema.
         exclude_unset: Whether to exclude unset values from the response schema.
         exclude_defaults: Whether to exclude default values from the response schema.
+        errors: A list of error statuses that may be returned as an error response.
 
     Returns:
         A django-ninja response dict mapping the given schema to 200 status code, and 'ErrorResponse' to all others.
     """
+    if errors is None:
+        errors = []
     return SchemaOrErrorWithExclusions(
-        response={200: schema, **ErrorStatuses},
+        response={200: schema, **{n: ErrorStatuses[n] for n in errors}},
         exclude_none=exclude_none,
         exclude_unset=exclude_unset,
         exclude_defaults=exclude_defaults
     )
-
-
-def get_error_response(
-    status: StatusCode = StatusCode.NotFound,
-    details: str = 'Resource not found on the server!',
-    warnings: Optional[list[str]] = None,
-    data: Optional[dict[str, Any]] = None
-) -> tuple[int, ErrorResponse]:
-    """Returns a tuple containing a status code and a formatted 'ErrorResponse' schema.
-
-    Args:
-        status: A `StatusCode` integer indicating the type of error response.
-        details: A string describing the details of the error.
-        warnings: An optional list of specific warnings related to the error.
-        data: An optional dictionary containing any relevant related to the error, usually for testing.
-    """
-    return status, ErrorResponse(details=details, status=status, warnings=warnings, data=data)

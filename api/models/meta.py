@@ -9,7 +9,7 @@ from typing import Optional
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import CharField, DateField, Model, TextField
 from django.utils import timezone
-from hexproof.hexapi import schema as Hexproof
+from hexproof.providers.hexapi import schema as Hexproof
 from ninja import Schema
 
 # Local Imports

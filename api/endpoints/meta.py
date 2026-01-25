@@ -2,17 +2,15 @@
 * Endpoint: Meta
 * This route handles management of all Meta objects.
 """
-# Standard Library Imports
-from contextlib import suppress
-
 # Third Party Imports
 from ninja import Router
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest
-from hexproof.hexapi import schema as Hexproof
+from hexproof.providers.hexapi import schema as Hexproof
 
 # Local Imports
 from api.models import Meta
-from api.utils.response import StatusCode, schema_or_error, get_error_response
+from api.utils.response import StatusCode, schema_or_error, ErrorResponseNotFound
 
 # Django Ninja Objects
 router = Router()
@@ -35,7 +33,8 @@ def get_meta_all(request: HttpRequest):
     return {n.resource: n._api_obj for n in Meta.objects.all()}
 
 
-@router.get("{resource}", **schema_or_error(Hexproof.Meta))
+@router.get("{resource}", **schema_or_error(
+    schema=Hexproof.Meta, errors=[StatusCode.NotFound]))
 def get_meta(request: HttpRequest, resource: str):
     """Retrieve a dictionary of all resource metas.
 
@@ -46,12 +45,10 @@ def get_meta(request: HttpRequest, resource: str):
     Returns:
         MetaSchema: A specific MetaSchema object matching a resource value.
     """
-    with suppress(Exception):
-
-        # Return found Meta resource
-        return Meta.objects.get(resource=resource)._api_obj
-
-    # Meta resource not found
-    return get_error_response(
-        status=StatusCode.NotFound,
-        details=f"Metadata matching resource name '{resource}' not found.")
+    try:
+        _obj = Meta.objects.get(resource=resource)
+        return _obj._api_obj
+    except ObjectDoesNotExist:
+        # Meta resource not found
+        return StatusCode.NotFound, ErrorResponseNotFound(
+            details=f"Metadata matching resource name '{resource}' not found.")

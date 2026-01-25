@@ -2,17 +2,15 @@
 * Endpoint: Keys
 * This route handles management of all Key objects.
 """
-# Standard Library Imports
-from contextlib import suppress
-
 # Third Party Imports
 from ninja import Router
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest
-from hexproof.hexapi import schema as Hexproof
+from hexproof.providers.hexapi import schema as Hexproof
 
 # Local Imports
 from api.models import APIKey
-from api.utils.response import schema_or_error, StatusCode, get_error_response
+from api.utils.response import schema_or_error, StatusCode, ErrorResponseDisabled, ErrorResponseNotFound
 
 # Django Ninja Objects
 router = Router()
@@ -22,7 +20,8 @@ router = Router()
 """
 
 
-@router.get("{name}", **schema_or_error(Hexproof.APIKey))
+@router.get("{name}", **schema_or_error(
+    schema=Hexproof.APIKey, errors=[StatusCode.NotFound, StatusCode.Disabled]))
 def get_key(request: HttpRequest, name: str):
     """Retrieve an API key that is currently active.
 
@@ -34,17 +33,15 @@ def get_key(request: HttpRequest, name: str):
         APIKeySchema: An APIKey object if an active key was found, otherwise
             an error object with a reason code and readable message.
     """
-    with suppress(Exception):
-
-        # Key is valid or disabled
+    # Does the key exist?
+    try:
         k = APIKey.objects.get(name=name)
-        if k.active:
-            return k._api_obj
-        return get_error_response(
-            status=StatusCode.Disabled,
-            details=f"API key '{name}' is disabled!")
+    except ObjectDoesNotExist:
+        return StatusCode.NotFound, ErrorResponseNotFound(
+            details=f"API key '{name}' not found!")
 
-    # Key couldn't be located
-    return get_error_response(
-        status=StatusCode.NotFound,
-        details=f"API key '{name}' not found!")
+    # Is the key enabled?
+    if k.active:
+        return k._api_obj
+    return StatusCode.Disabled, ErrorResponseDisabled(
+        details=f"API key '{name}' is disabled!")

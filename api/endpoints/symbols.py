@@ -3,7 +3,6 @@
 * This route handles management of all SVG Symbol objects.
 """
 # Standard Library Imports
-from contextlib import suppress
 from pathlib import Path
 from typing import Optional
 
@@ -13,15 +12,21 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest, FileResponse, HttpResponseRedirect
 from omnitils.files import load_data_file
 from api.models import Meta
-from hexproof.hexapi import schema as Hexproof
-from hexproof.vectors.enums import SymbolRarity
-from hexproof.vectors import schema as Vectors
+from hexproof.providers.hexapi import schema as Hexproof
+from hexproof.providers.vectors.enums import SymbolRarity
+from hexproof.providers.vectors import schema as Vectors
 
 # Local Imports
 from api.apps import HexproofConfig
 from api.models.sets import Set
 from api.models.symbols import get_symbol_rarity, SymbolSet, SymbolWatermark
-from api.utils.response import StatusCode, get_error_response, schema_or_error
+from api.utils.response import (
+    ErrorResponseServer,
+    ErrorResponseNotFound,
+    ErrorResponseNotImplemented,
+    ErrorResponseBadRequest,
+    StatusCode,
+    schema_or_error)
 
 # Django Ninja Objects
 router = Router()
@@ -108,6 +113,7 @@ def get_symbol_set_default(rarity: Optional[str] = None):
     Args:
         rarity: Rarity to look for if provided.
     """
+
     # Get default symbol
     try:
         symbol = SymbolSet.objects.get(code='DEFAULT')
@@ -115,27 +121,28 @@ def get_symbol_set_default(rarity: Optional[str] = None):
             return symbol.get_symbol_uri_map()
     except ObjectDoesNotExist:
         # No default symbol registered in the database
-        return get_error_response(
-            status=StatusCode.Server,
+        return StatusCode.Server, ErrorResponseServer(
             details="No default symbol is registered in the server database!",
-            warnings=[
-                "If you requested an SVG symbol other than 'DEFAULT', it wasn't found."
-            ])
+            warnings=["If you requested a SVG symbol other than 'DEFAULT', it wasn't found."])
 
     # Get rarity requested
     if matched := get_symbol_rarity(rarity):
-        return get_svg(symbol.get_symbol_path(matched))
+        try:
+            return get_svg(symbol.get_symbol_path(matched))
+        except FileNotFoundError:
+            pass
 
     # Revert to common rarity
-    with suppress(Exception):
-        return get_svg(symbol.get_symbol_path('C'))
-    return get_error_response(
-        status=StatusCode.Server,
-        details="The default symbol does not support the rarity provided!",
-        warnings=[
-            "If you requested an SVG symbol other than 'DEFAULT', it wasn't found.",
-            "Attempted to fallback to 'common' rarity, but the default symbol does not support it!"
-        ])
+    try:
+        return get_svg(symbol.get_symbol_path(SymbolRarity.C))
+    except FileNotFoundError:
+        # Unable to find common rarity
+        return StatusCode.Server, ErrorResponseServer(
+            details=f"The default symbol does not support the rarity provided: '{rarity}'",
+            warnings=[
+                "If you requested an SVG symbol other than 'DEFAULT', it wasn't found.",
+                "Attempted to fallback to 'common' rarity, but the default symbol does not support it!"
+            ])
 
 
 """
@@ -143,7 +150,7 @@ def get_symbol_set_default(rarity: Optional[str] = None):
 """
 
 
-@router.get('rarity/', **schema_or_error(dict[str, str]))
+@router.get('rarity/', **schema_or_error(dict[str, str], errors=[]))
 def get_symbol_rarities(request: HttpRequest):
     """Return a dictionary of all set symbol rarities.
 
@@ -161,7 +168,7 @@ def get_symbol_rarities(request: HttpRequest):
 """
 
 
-@router.get('set/', **schema_or_error(dict[str, dict[SymbolRarity, str]]))
+@router.get('set/', **schema_or_error(dict[str, dict[SymbolRarity, str]], errors=[]))
 def get_symbol_set_all(request: HttpRequest):
     """Return a dictionary of all set symbol collections.
 
@@ -175,7 +182,8 @@ def get_symbol_set_all(request: HttpRequest):
     return {n.code: n.get_symbol_uri_map() for n in SymbolSet.objects.all()}
 
 
-@router.get('set/{code}', **schema_or_error(dict[SymbolRarity, str]))
+@router.get('set/{code}', **schema_or_error(
+    schema=dict[SymbolRarity, str], errors=[StatusCode.NotFound]))
 def get_symbol_set(request: HttpRequest, code: str):
     """Returns a URI map for a 'SymbolSet' resource.
 
@@ -186,17 +194,16 @@ def get_symbol_set(request: HttpRequest, code: str):
     Returns:
         SetSymbolURI: A URI map from a 'SymbolSet' object.
     """
-    with suppress(Exception):
-        # Return found symbol
+    try:
         return search_symbol_set(code).get_symbol_uri_map()
+    except ObjectDoesNotExist:
+        # Code not recognized
+        return StatusCode.NotFound, ErrorResponseNotFound(
+            details=f"Symbol matching code '{code}' not found.")
 
-    # Code not recognized
-    return get_error_response(
-        status=StatusCode.NotFound,
-        details=f"Symbol matching code '{code}' not found.")
 
-
-@router.get('set/{code}/{rarity}', **schema_or_error(type[FileResponse]))
+@router.get('set/{code}/{rarity}', **schema_or_error(
+    schema=type[FileResponse], errors=[StatusCode.NotFound, StatusCode.NotImplemented, StatusCode.Server]))
 def get_symbol_set_rarity(request: HttpRequest, code: str, rarity: str):
     """Returns a specific SVG set symbol asset with a given symbol or set code and rarity.
 
@@ -218,23 +225,21 @@ def get_symbol_set_rarity(request: HttpRequest, code: str, rarity: str):
     # Ensure requested rarity is valid
     if not matched:
         # Rarity requested not found
-        return get_error_response(
-            status=StatusCode.NotFound,
+        return StatusCode.NotFound, ErrorResponseNotFound(
             details=f"Unrecognized rarity: '{rarity}'")
     if matched not in symbol.supported:
         # Symbol doesn't support the rarity requested
-        return get_error_response(
-            status=StatusCode.NotImplemented,
+        return StatusCode.NotImplemented, ErrorResponseNotImplemented(
             details=f"Symbol matching code '{code}' does not support rarity '{rarity}'.")
 
     # Return SVG file if it exists
     svg_file = symbol.get_symbol_path(matched)
-    with suppress(Exception):
+    try:
         return get_svg(svg_file)
-    return get_error_response(
+    except FileNotFoundError:
         # File resource not found
-        status=StatusCode.NotFound,
-        details=f"SVG file for code:rarity '{code}:{rarity}' could not be located.")
+        return StatusCode.NotFound, ErrorResponseNotFound(
+            details=f"SVG file for code:rarity '{code}:{rarity}' could not be located.")
 
 
 """
@@ -262,7 +267,8 @@ def get_symbol_watermark_all(request: HttpRequest):
     )
 
 
-@router.get('watermark/set/{code}', **schema_or_error(type[FileResponse]))
+@router.get('watermark/set/{code}', **schema_or_error(
+    schema=type[FileResponse], errors=[StatusCode.NotFound, StatusCode.NotImplemented, StatusCode.Server]))
 def get_symbol_watermark_set(request: HttpRequest, code: str):
     """Returns a watermark 'Set' symbol with a given set symbol code or set code.
 
@@ -280,22 +286,20 @@ def get_symbol_watermark_set(request: HttpRequest, code: str):
         if obj.supports_watermark():
             return get_svg(obj.get_symbol_path('WM'))
         # 'Set' symbol found but watermark not supported
-        return get_error_response(
-            status=StatusCode.NotImplemented,
+        return StatusCode.NotImplemented, ErrorResponseNotImplemented(
             details=f"Set symbol collection '{code}' doesn't support a watermark symbol.")
     except ObjectDoesNotExist:
         # No watermark found
-        return get_error_response(
-            status=StatusCode.NotFound,
+        return StatusCode.NotFound, ErrorResponseNotFound(
             details=f"Unrecognized Set symbol code: '{code}'")
     except FileNotFoundError:
         # 'Set' symbol found, but file resource is missing
-        return get_error_response(
-            status=StatusCode.Server,
+        return StatusCode.Server, ErrorResponseServer(
             details=f"Unable to locate SVG file for recognized Set symbol watermark: '{code}'")
 
 
-@router.get('watermark/{name}', **schema_or_error(type[FileResponse]))
+@router.get('watermark/{name}', **schema_or_error(
+    schema=type[FileResponse], errors=[StatusCode.NotFound, StatusCode.NotImplemented, StatusCode.Server]))
 def get_symbol_watermark(request: HttpRequest, name: str):
     """Returns a specific SVG watermark symbol asset with a given name.
 
@@ -318,18 +322,15 @@ def get_symbol_watermark(request: HttpRequest, name: str):
                 if obj.supports_watermark():
                     return get_svg(obj.get_symbol_path('WM'))
                 # 'Set' symbol found but watermark not supported
-                return get_error_response(
-                    status=StatusCode.NotImplemented,
+                return StatusCode.NotImplemented, ErrorResponseNotImplemented(
                     details=f"Recognized 'Set' code '{name}', but this set doesn't have a supported watermark symbol.")
             except ObjectDoesNotExist:
                 # No watermark found
-                return get_error_response(
-                    status=StatusCode.NotFound,
+                return StatusCode.NotFound, ErrorResponseNotFound(
                     details=f"Unrecognized watermark: '{name}'")
     except FileNotFoundError:
         # Watermark found, but file resource is missing
-        return get_error_response(
-            status=StatusCode.Server,
+        return StatusCode.Server, ErrorResponseServer(
             details=f"Unable to locate SVG file for recognized watermark: '{name}'")
 
 
@@ -348,7 +349,8 @@ def get_symbol_package_default(request: HttpRequest):
     return HttpResponseRedirect('/symbols/package/optimized')
 
 
-@router.get('package/{name}', **schema_or_error(type[HttpResponseRedirect]))
+@router.get('package/{name}', **schema_or_error(
+    schema=type[HttpResponseRedirect], errors=[StatusCode.BadRequest]))
 def get_symbol_package(request: HttpRequest, name: str):
     """Return a specified symbol package from the `mtg-vectors` repository.
 
@@ -358,28 +360,34 @@ def get_symbol_package(request: HttpRequest, name: str):
     """
     try:
         obj = Meta.objects.get(resource=f'mtg-vectors[{name}]')
+        return HttpResponseRedirect(obj.uri)
     except ObjectDoesNotExist:
-        err_data = None
+        # Unrecognized 'Meta' resource
+        err_data = {}
         if options := Meta.objects.filter(resource__contains='mtg-vectors['):
             options = [n.resource.split('[')[1][:-1] for n in options]
-            err_data = dict(
+            err_data['data'] = dict(
                 options={
                     n: request.build_absolute_uri(f"/symbols/package/{n}") for n in options
                 }
             )
-        return get_error_response(
-            status=StatusCode.BadRequest,
+        return StatusCode.BadRequest, ErrorResponseBadRequest(
             details=f"Unrecognized mtg-vectors package: '{name}'. Please provide a recognized package name.",
-            data=err_data
+            **err_data
         )
-    return HttpResponseRedirect(obj.uri)
 
 
-@router.get('manifest/', **schema_or_error(Vectors.Manifest))
+@router.get('manifest/', **schema_or_error(
+    schema=Vectors.Manifest, errors=[StatusCode.Server]))
 def get_symbol_manifest(request: HttpRequest):
     """Return the current symbol manifest from the `mtg-vectors` repository.
 
     Args:
         request: HTTP request object.
     """
-    return load_data_file(HexproofConfig.PATH.VECTORS_MANIFEST)
+    try:
+        return load_data_file(HexproofConfig.PATH.VECTORS_MANIFEST)
+    except (FileNotFoundError, ValueError, OSError):
+        return StatusCode.Server, ErrorResponseServer(
+            details="Server could not access the mtg-vectors symbol manifest!"
+        )

@@ -3,7 +3,7 @@
 """
 # Third Party Imports
 from django.db.models import IntegerChoices, IntegerField, TextField, BooleanField, CharField, Model
-from hexproof.hexapi import schema as Hexproof
+from hexproof.providers.hexapi import schema as Hexproof
 from ninja import Schema
 
 

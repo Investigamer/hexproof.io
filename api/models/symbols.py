@@ -11,10 +11,9 @@ from typing import Optional
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Model, CharField, ForeignKey, SET_NULL, CASCADE, TextChoices
+from hexproof.providers.vectors.enums import SymbolRarity, RarityNameMap
+from hexproof.providers.vectors import schema as Vectors
 from omnitils.files import load_data_file
-
-from hexproof.vectors.enums import SymbolRarity, RarityNameMap
-from hexproof.vectors import schema as Vectors
 from omnitils.schema import Schema
 
 # Local Imports
@@ -180,7 +179,7 @@ def get_symbol_rarity(rarity: str) -> Optional[str]:
         return rarity
     if rarity in RarityNameMap:
         return str(RarityNameMap[rarity])
-    return
+    return None
 
 
 """

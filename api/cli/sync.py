@@ -7,9 +7,9 @@ import os
 
 # Third Party Imports
 import click
-from hexproof.mtgjson import schema as MJson
-from hexproof.scryfall import schema as Scry
-from hexproof.vectors import schema as Vectors
+from hexproof.providers.mtgjson import schema as MJson
+from hexproof.providers.scryfall import schema as Scry
+from hexproof.providers.vectors import schema as Vectors
 from omnitils.files import load_data_file, dump_data_file
 
 # Local Imports
