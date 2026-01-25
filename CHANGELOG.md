@@ -1,3 +1,11 @@
+## 1.1.1 (2026-01-25)
+
+### Fix
+
+- **api**: Rework ErrorResponse schema to make docs more sensible and indicate what errors are expected for a given endpoint
+- **postgres**: Add required postgres import to INSTALLED_APPS
+- **docker**: Ensure collectstatic runs without inputs
+
 ## 1.1.0 (2024-10-15)
 
 ### Feat

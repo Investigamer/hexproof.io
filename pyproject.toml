@@ -1,6 +1,6 @@
 [project]
 name = "hexproof.io"
-version = "1.1.0"
+version = "1.1.1"
 description = "A comprehensive Magic the Gathering data and resources API."
 authors = [{ name = "Investigamer", email = "dev@hexproof.io" }]
 license = "MPL-2.0"
@@ -48,7 +48,7 @@ build-backend = "hatchling.build"
 packages = ["api", "core"]
 
 [tool.commitizen]
-version = "1.1.0"
+version = "1.1.1"
 encoding = "utf-8"
 tag_format = "$major.$minor.$patch"
 update_changelog_on_bump = true
