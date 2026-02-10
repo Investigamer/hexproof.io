@@ -457,6 +457,20 @@ wheels = [
 ]
 
 [[package]]
+name = "django-cors-headers"
+version = "4.9.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "asgiref" },
+    { name = "django", version = "5.2.10", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "django", version = "6.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/21/39/55822b15b7ec87410f34cd16ce04065ff390e50f9e29f31d6d116fc80456/django_cors_headers-4.9.0.tar.gz", hash = "sha256:fe5d7cb59fdc2c8c646ce84b727ac2bca8912a247e6e68e1fb507372178e59e8", size = 21458, upload-time = "2025-09-18T10:40:52.326Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/30/d8/19ed1e47badf477d17fb177c1c19b5a21da0fd2d9f093f23be3fb86c5fab/django_cors_headers-4.9.0-py3-none-any.whl", hash = "sha256:15c7f20727f90044dcee2216a9fd7303741a864865f0c3657e28b7056f61b449", size = 12809, upload-time = "2025-09-18T10:40:50.843Z" },
+]
+
+[[package]]
 name = "django-environ"
 version = "0.11.2"
 source = { registry = "https://pypi.org/simple" }
@@ -503,12 +517,13 @@ wheels = [
 
 [[package]]
 name = "hexproof-io"
-version = "1.1.0"
+version = "1.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "backoff" },
     { name = "bs4" },
     { name = "click" },
+    { name = "django-cors-headers" },
     { name = "django-environ" },
     { name = "django-ninja" },
     { name = "hexproof" },
@@ -535,6 +550,7 @@ requires-dist = [
     { name = "bs4", specifier = "~=0.0.2" },
     { name = "click", specifier = "~=8.1.7" },
     { name = "commitizen", marker = "extra == 'dev'", specifier = ">=3.20,<4" },
+    { name = "django-cors-headers", specifier = ">=4.3,<5" },
     { name = "django-environ", specifier = "~=0.11.2" },
     { name = "django-ninja", specifier = "~=1.5.3" },
     { name = "hexproof", specifier = "==0.4.0" },

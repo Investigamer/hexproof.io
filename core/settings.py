@@ -33,7 +33,10 @@ SECRET_KEY = ENV('SECRET_KEY')
 DEBUG = ENV('DEBUG')
 
 # Hosts allowed access
-ALLOWED_HOSTS = ENV.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
+ALLOWED_HOSTS = ENV.list('ALLOWED_HOSTS', default=['*'])
+
+# CORS Settings
+CORS_ALLOW_ALL_ORIGINS = ENV.bool('CORS_ALLOW_ALL_ORIGINS', default=True)
 
 # CSRF Trusted Origins
 CSRF_TRUSTED_ORIGINS = ENV.list(
@@ -55,12 +58,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.postgres',
     'django.contrib.staticfiles',
+    'corsheaders',
     'api'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'core.middleware.SubdomainRoutesMiddleware',
