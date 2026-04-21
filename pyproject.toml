@@ -21,7 +21,7 @@ dependencies = [
     "backoff~=2.2.1",
     "yarl~=1.9.3",
     "django-ninja~=1.5.3",
-    "python-dotenv~=1.0.0",
+    "python-dotenv~=1.2.2",
     "hexproof==0.4.0",
     "click~=8.1.7",
     "psycopg2-binary~=2.9.9",
