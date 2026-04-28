@@ -1,3 +1,9 @@
+## 1.2.0 (2026-04-28)
+
+### Feat
+
+- **cors**: Enable CORS support and update allowed hosts in configuration
+
 ## 1.1.1 (2026-01-25)
 
 ### Fix
