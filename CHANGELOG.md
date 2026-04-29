@@ -1,5 +1,9 @@
 ## 1.2.1 (2026-04-28)
 
+### Build
+
+- **pyproject.toml**: Update deps, remove --reload from Dockerfile cmd
+
 ## 1.2.0 (2026-04-28)
 
 ### Feat
