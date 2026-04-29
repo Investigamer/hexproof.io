@@ -20,6 +20,8 @@ from api.cli.docs import docs_group
 from api.cli.update import update_group
 from api.cli.sync import sync_group
 
+# Todo: Rewrite using Typer
+
 """"
 * Commands
 """
