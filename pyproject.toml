@@ -30,7 +30,7 @@ dependencies = [
     "whitenoise>=6.12.0,<6.13",
     "typer>=0.25.0,<0.26",
     "django-cors-headers>=4.3,<5",
-    "django>=5.2.10",
+    "django>=5.2.13",
 ]
 
 [project.optional-dependencies]
